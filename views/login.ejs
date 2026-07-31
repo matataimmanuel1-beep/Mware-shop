@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Portal Login - Mware Shop</title>
+    <script src="https://tailwindcss.com"></script>
+</head>
+<body class="<%= theme.bg %> <%= theme.text %> flex items-center justify-center h-screen font-sans">
+    <div class="bg-slate-800 p-8 rounded-xl shadow-xl w-96 border <%= theme.accent %>">
+        <h2 class="text-3xl font-extrabold mb-2 text-center tracking-wide">Mware Shop</h2>
+        <p class="text-center text-xs text-slate-400 mb-6">Select your portal pathway below</p>
+
+        <% if (error) { %>
+            <div class="bg-red-900/50 border border-red-500 text-red-200 text-xs p-3 rounded mb-4 font-semibold text-center">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <!-- Unified Navigation Tabs -->
+        <div class="flex border-b border-slate-700 mb-6 text-sm font-bold">
+            <button id="customerTab" onclick="setPortal('customer')" class="flex-1 pb-2 border-b-2 border-indigo-500 text-white transition">Customer Portal</button>
+            <button id="adminTab" onclick="setPortal('admin')" class="flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">Admin Panel</button>
+        </div>
+
+        <!-- Dynamic Action Form -->
+        <form id="authForm" action="/login/customer" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">Account Email</label>
+                <input type="email" name="email" required class="w-full p-2.5 rounded bg-slate-700 border border-slate-600 focus:outline-none focus:border-indigo-500 text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Password</label>
+                <input type="password" name="password" required class="w-full p-2.5 rounded bg-slate-700 border border-slate-600 focus:outline-none focus:border-indigo-500 text-white">
+            </div>
+            <button type="submit" id="submitBtn" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded font-bold transition">Enter Customer Storefront</button>
+        </form>
+        
+        <p class="text-[10px] text-center text-slate-500 mt-4 leading-relaxed font-mono">
+            Default Admin credentials:<br>admin@mwareshop.com / adminpassword
+        </p>
+    </div>
+
+    <!-- UI State Control Script -->
+    <script>
+        function setPortal(role) {
+            const form = document.getElementById('authForm');
+            const button = document.getElementById('submitBtn');
+            const cTab = document.getElementById('customerTab');
+            const aTab = document.getElementById('adminTab');
+
+            if (role === 'customer') {
+                form.action = '/login/customer';
+                button.textContent = 'Enter Customer Storefront';
+                button.className = 'w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded font-bold transition text-white';
+                cTab.className = 'flex-1 pb-2 border-b-2 border-indigo-500 text-white transition';
+                aTab.className = 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+            } else {
+                form.action = '/login/admin';
+                button.textContent = 'Access Admin Dashboard';
+                button.className = 'w-full py-2.5 bg-amber-600 hover:bg-amber-700 rounded font-bold transition text-slate-950';
+                cTab.className = 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+                aTab.className = 'flex-1 pb-2 border-b-2 border-amber-500 text-amber-400 transition';
+            }
+        }
+    </script>
+</body>
+</html>
+
