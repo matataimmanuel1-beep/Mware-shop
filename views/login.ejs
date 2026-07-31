@@ -1,67 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Portal Login - Mware Shop</title>
-    <script src="https://tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <title>Portal Login - Mware Shop</title>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #1e293b; padding: 30px; doc-align: center; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.3); width: 350px; border: 2px solid #6366f1; text-align: center; }
+        h2 { margin: 0 0 5px 0; font-size: 28px; letter-spacing: 1px; color: #fff; }
+        p { margin: 0 0 20px 0; font-size: 13px; color: #94a3b8; }
+        .tabs { display: flex; margin-bottom: 20px; border-b: 1px solid #334155; }
+        .tab { flex: 1; padding: 10px; background: none; border: none; color: #94a3b8; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; font-size: 14px; }
+        .tab.active { color: #fff; border-bottom: 2px solid #6366f1; }
+        .form-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 14px; margin-bottom: 5px; color: #cbd5e1; }
+        input { wIdth: 100%; padding: 10px; box-sizing: border-box; background: #334155; border: 1px solid #475569; border-radius: 6px; color: #fff; font-size: 14px; }
+        input:focus { outline: none; border-color: #6366f1; }
+        .btn { width: 100%; padding: 12px; background: #6366f1; border: none; border-radius: 6px; color: #fff; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #4f46e5; }
+        .error { background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #fca5a5; font-size: 12px; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; }
+        .footer-note { font-family: monospace; font-size: 11px; color: #64748b; margin-top: 20px; line-height: 1.4; }
+    </style>
 </head>
-<body class="<%= theme.bg %> <%= theme.text %> flex items-center justify-center h-screen font-sans">
-    <div class="bg-slate-800 p-8 rounded-xl shadow-xl w-96 border <%= theme.accent %>">
-        <h2 class="text-3xl font-extrabold mb-2 text-center tracking-wide">Mware Shop</h2>
-        <p class="text-center text-xs text-slate-400 mb-6">Select your portal pathway below</p>
+<body>
+    <div class="card" id="mainCard">
+        <h2>Mware Shop</h2>
+        <p>Select your portal pathway below</p>
 
         <% if (error) { %>
-            <div class="bg-red-900/50 border border-red-500 text-red-200 text-xs p-3 rounded mb-4 font-semibold text-center">
-                <%= error %>
-            </div>
+            <div class="error"><%= error %></div>
         <% } %>
 
-        <!-- Unified Navigation Tabs -->
-        <div class="flex border-b border-slate-700 mb-6 text-sm font-bold">
-            <button id="customerTab" onclick="setPortal('customer')" class="flex-1 pb-2 border-b-2 border-indigo-500 text-white transition">Customer Portal</button>
-            <button id="adminTab" onclick="setPortal('admin')" class="flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">Admin Panel</button>
+        <div class="tabs">
+            <button id="customerTab" onclick="setPortal('customer')" class="tab active">Customer Portal</button>
+            <button id="adminTab" onclick="setPortal('admin')" class="tab">Admin Panel</button>
         </div>
 
-        <!-- Dynamic Action Form -->
-        <form id="authForm" action="/login/customer" method="POST" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Account Email</label>
-                <input type="email" name="email" required class="w-full p-2.5 rounded bg-slate-700 border border-slate-600 focus:outline-none focus:border-indigo-500 text-white">
+        <form id="authForm" action="/login/customer" method="POST">
+            <div class="form-group">
+                <label>Account Email</label>
+                <input type="email" name="email" required>
             </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Password</label>
-                <input type="password" name="password" required class="w-full p-2.5 rounded bg-slate-700 border border-slate-600 focus:outline-none focus:border-indigo-500 text-white">
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
             </div>
-            <button type="submit" id="submitBtn" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded font-bold transition">Enter Customer Storefront</button>
+            <button type="submit" id="submitBtn" class="btn">Enter Customer Storefront</button>
         </form>
         
-        <p class="text-[10px] text-center text-slate-500 mt-4 leading-relaxed font-mono">
+        <div class="footer-note">
             Default Admin credentials:<br>admin@mwareshop.com / adminpassword
-        </p>
+        </div>
     </div>
 
-    <!-- UI State Control Script -->
     <script>
         function setPortal(role) {
             const form = document.getElementById('authForm');
             const button = document.getElementById('submitBtn');
             const cTab = document.getElementById('customerTab');
             const aTab = document.getElementById('adminTab');
+            const card = document.getElementById('mainCard');
 
             if (role === 'customer') {
                 form.action = '/login/customer';
                 button.textContent = 'Enter Customer Storefront';
-                button.className = 'w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 rounded font-bold transition text-white';
-                cTab.className = 'flex-1 pb-2 border-b-2 border-indigo-500 text-white transition';
-                aTab.className = 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+                button.style.background = '#6366f1';
+                card.style.borderColor = '#6366f1';
+                cTab.classList.add('active');
+                aTab.classList.remove('active');
             } else {
                 form.action = '/login/admin';
                 button.textContent = 'Access Admin Dashboard';
-                button.className = 'w-full py-2.5 bg-amber-600 hover:bg-amber-700 rounded font-bold transition text-slate-950';
-                cTab.className = 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
-                aTab.className = 'flex-1 pb-2 border-b-2 border-amber-500 text-amber-400 transition';
+                button.style.background = '#d97706';
+                card.style.borderColor = '#d97706';
+                aTab.classList.add('active');
+                cTab.classList.remove('active');
             }
         }
     </script>
 </body>
 </html>
-
