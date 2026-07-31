@@ -24,18 +24,25 @@
         <a href="/" style="background:#334155; color:white; padding:8px 12px; border-radius:4px; text-decoration:none; font-size:13px;">View Storefront</a>
     </div>
 
+    <!-- Top Block Section -->
     <div class="grid">
+        <!-- Self Admin Management Module -->
         <div class="panel">
-            <h3>Add New Product</h3>
-            <form action="/admin/product/add" method="POST" enctype="multipart/form-data">
-                <div class="group"><label>Product Name</label><input type="text" name="name" required></div>
-                <div class="group" style="display:flex; gap:10px;">
-                    <div style="flex:2;"><label>Price</label><input type="number" step="0.01" name="price" required></div>
-                    <div style="flex:1;"><label>Currency</label><input type="text" name="currency" value="USD" required></div>
+            <h3 style="color:#f43f5e;">My Admin Login Settings</h3>
+            <form action="/admin/self/update" method="POST">
+                <div class="group">
+                    <label>Admin Login Email</label>
+                    <input type="email" name="newAdminEmail" value="<%= adminProfile.email %>" required>
                 </div>
-                <div class="group"><label>Stock Allocation</label><select name="status"><option value="In Stock">In Stock</option><option value="Out of Stock">Out of Stock</option></select></div>
-                <div class="group"><label>Upload Image</label><input type="file" name="image" accept="image/*"></div>
-                <button type="submit" class="btn" style="background:#6366f1;">Deploy Product</button>
+                <div class="group">
+                    <label>Admin Contact Phone</label>
+                    <input type="text" name="newAdminPhone" value="<%= adminProfile.phone %>" required>
+                </div>
+                <div class="group">
+                    <label>Admin Access Password</label>
+                    <input type="text" name="newAdminPassword" value="<%= adminProfile.password %>" required>
+                </div>
+                <button type="submit" class="btn" style="background:#e11d48;">Save Admin Profile</button>
             </form>
         </div>
 
@@ -60,14 +67,19 @@
         </div>
     </div>
 
+    <!-- Bottom Block Section -->
     <div class="grid">
         <div class="panel">
-            <h3>Edit Store Contact Matrix</h3>
-            <form action="/admin/contact/update" method="POST">
-                <div class="group"><label>Telephone Route</label><input type="text" name="phone" value="<%= contactInfo.phone %>" required></div>
-                <div class="group"><label>Support Email</label><input type="email" name="email" value="<%= contactInfo.email %>" required></div>
-                <div class="group"><label>HQ Location Address</label><input type="text" name="address" value="<%= contactInfo.address %>" required></div>
-                <button type="submit" class="btn" style="background:#10b981;">Commit Global Contacts</button>
+            <h3>Add New Product</h3>
+            <form action="/admin/product/add" method="POST" enctype="multipart/form-data">
+                <div class="group"><label>Product Name</label><input type="text" name="name" required></div>
+                <div class="group" style="display:flex; gap:10px;">
+                    <div style="flex:2;"><label>Price</label><input type="number" step="0.01" name="price" required></div>
+                    <div style="width:70px;"><label>Currency</label><input type="text" name="currency" value="USD" required></div>
+                </div>
+                <div class="group"><label>Stock Allocation</label><select name="status"><option value="In Stock">In Stock</option><option value="Out of Stock">Out of Stock</option></select></div>
+                <div class="group"><label>Upload Image</label><input type="file" name="image" accept="image/*"></div>
+                <button type="submit" class="btn" style="background:#6366f1;">Deploy Product</button>
             </form>
         </div>
 
@@ -93,6 +105,18 @@
                 </tbody>
             </table>
         </div>
+    </div>
+
+    <div class="panel" style="margin-top:25px;">
+        <h3>Edit Store Contact Matrix</h3>
+        <form action="/admin/contact/update" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
+            <div class="group"><label>Telephone Route</label><input type="text" name="phone" value="<%= contactInfo.phone %>" required></div>
+            <div class="group"><label>Support Email</label><input type="email" name="email" value="<%= contactInfo.email %>" required></div>
+            <div class="group"><label>HQ Location Address</label><input type="text" name="address" value="<%= contactInfo.address %>" required></div>
+            <div style="grid-column: 1 / -1; text-align: right;">
+                <button type="submit" class="btn" style="width:auto; padding:10px 30px; background:#10b981;">Commit Global Contacts</button>
+            </div>
+        </form>
     </div>
 </body>
 </html>
