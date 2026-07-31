@@ -1,4 +1,3 @@
-cat << 'EOF' > server.js
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
@@ -10,9 +9,7 @@ const app = express();
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // Note: If deploying to production (e.g., AWS, Heroku), ensure your environment 
-    // provides the correct SSL certificates. Rejecting unauthorized certs is fine for testing.
-    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+    ssl: { rejectUnauthorized: false }
 });
 
 const storage = multer.diskStorage({
@@ -29,14 +26,11 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
-
-// SECURITY WARNING: In a real production app, always set a complex secret 
-// via process.env.SESSION_SECRET instead of hardcoding it.
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'mware_secure_production_hash',
+    secret: 'mware_secure_production_hash',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to true if running over HTTPS
+    cookie: { secure: false }
 }));
 
 async function initDatabase() {
@@ -149,51 +143,51 @@ app.get('/checkout', async (req, res) => {
     }
 });
 
-// FIXED: Completed the broken checkout endpoint safely using Parameterized Queries
 app.post('/checkout/pay', async (req, res) => {
     const { fullName, shippingAddress, gatewayMethod, totalAmount, totalCurrency } = req.body;
     const cartItems = req.session.cart || [];
-    
-    if (cartItems.length === 0) {
-        return res.status(400).send("Your cart is empty.");
-    }
-
     const orderId = 'MW-' + Date.now().toString().slice(-6).toUpperCase();
     const customerEmail = req.session.user ? req.session.user.email : 'Guest Checkout';
     const itemNames = cartItems.map(i => i.name).join(', ');
     const orderDate = new Date().toLocaleDateString();
-    const initialStatus = 'Pending';
 
     try {
-        const queryText = `
-            INSERT INTO orders (id, customer_email, full_name, shipping_address, gateway_method, items, total, currency, status, date) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        `;
-        const values = [orderId, customerEmail, fullName, shippingAddress, gatewayMethod, itemNames, totalAmount, totalCurrency, initialStatus, orderDate];
-        
-        await pool.query(queryText, values);
-        
-        // Empty the cart after successful payment processing
+        await pool.query("INSERT INTO orders (id, customer_email, full_name, shipping_address, gateway_method, items, total, currency, status, date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", 
+            [orderId, customerEmail, fullName, shippingAddress, gatewayMethod, itemNames, totalAmount, totalCurrency, 'Pending Shipment', orderDate]);
         req.session.cart = [];
-        
-        const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");
-        res.render('dashboard', { 
-            products: [], 
-            contactInfo: contactRes.rows[0], 
-            activeTab: 'checkout', 
-            error: null, 
-            success: `Order ${orderId} placed successfully!`,
-            financials: { subtotal: '0.00', shipping: '0.00', tax: '0.00', total: '0.00', currency: totalCurrency }
-        });
+        res.send("<script>alert('Order placed successfully!'); window.location = '/';</script>");
     } catch (e) { 
         res.status(500).send(e.toString()); 
     }
 });
 
-// Server listener
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.get('/login', (req, res) => res.render('login', { error: null }));
+
+app.post('/login/customer', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const found = await pool.query("SELECT * FROM users WHERE email=$1 AND role='customer'", [email]);
+        if (found.rows.length > 0 && found.rows[0].password === password) {
+            req.session.user = { email: found.rows[0].email, role: 'customer' };
+            return res.redirect('/');
+        }
+        res.render('login', { error: 'Invalid client credentials.' });
+    } catch (e) { 
+        res.status(500).send(e.toString()); 
+    }
 });
 
+app.post('/login/signup', async (req, res) => {
+    const { email, phone, password } = req.body;
+    try {
+        const check = await pool.query("SELECT * FROM users WHERE email=$1 OR phone=$2", [email, phone]);
+        if (check.rows.length > 0) return res.render('login', { error: 'Email or Phone already mapped.' });
+        await pool.query("INSERT INTO users (email, phone, password, role) VALUES ($1,$2,$3,'customer')", [email, phone, password]);
+        req.session.user = { email: email, role: 'customer' };
+        res.redirect('/');
+    } catch (e) { 
+        res.status(500).send(e.toString()); 
+    }
+});
 
+app.post('/login/admin', async (req, res) => {const { email, password } = req.body;try {const found = await pool.query("SELECT * FROM users WHERE email=$1 AND role='admin'", [email]);if (found.rows.length > 0 && found.rows[0].password === password) {req.session.user = { email: found.rows[0].email, role: 'admin' };return res.redirect('/admin');}res.render('login', { error: 'Administrative Access Key Refused.' });} catch (e) {res.status(500).send(e.toString());}});app.get('/logout', (req, res) => {req.session.destroy();res.redirect('/');});const isAdmin = (req, res, next) => {if (req.session.user && req.session.user.role === 'admin') return next();res.status(403).send('Administrative Credentials Required.');};app.get('/admin', isAdmin, async (req, res) => {try {const adminRes = await pool.query("SELECT * FROM users WHERE role='admin' LIMIT 1");const accountsRes = await pool.query("SELECT * FROM users WHERE role='customer' ORDER BY email ASC");const productsRes = await pool.query("SELECT * FROM products ORDER BY id DESC");const ordersRes = await pool.query("SELECT * FROM orders ORDER BY id DESC");const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");res.render('admin', {products: productsRes.rows, contactInfo: contactRes.rows[0], adminProfile: adminRes.rows[0],orders: ordersRes.rows, accounts: accountsRes.rows});} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/orders/update-status', isAdmin, async (req, res) => {try {await pool.query("UPDATE orders SET status=$1 WHERE id=$2", [req.body.targetStatus, req.body.orderId]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/self/update', isAdmin, async (req, res) => {const { newAdminEmail, newAdminPhone, newAdminPassword } = req.body;try {await pool.query("UPDATE users SET email=$1, phone=$2, password=$3 WHERE role='admin'", [newAdminEmail, newAdminPhone, newAdminPassword]);req.session.user.email = newAdminEmail;res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/accounts/modify', isAdmin, async (req, res) => {try {await pool.query("UPDATE users SET password=$1 WHERE email=$2", [req.body.updatedPassword, req.body.targetEmail]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/add', isAdmin, upload.single('image'), async (req, res) => {const { name, price, currency, status } = req.body;const image = req.file ? "/public/uploads/" + req.file.filename : 'unsplash.com';try {await pool.query("INSERT INTO products (id, name, price, currency, status, image) VALUES ($1,$2,$3,$4,$5,$6)", [Date.now(), name, parseFloat(price), currency, status, image]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/toggle/:id', isAdmin, async (req, res) => {try {const prod = await pool.query("SELECT * FROM products WHERE id=$1", [req.params.id]);if (prod.rows.length > 0) {const nextStatus = prod.rows[0].status === 'In Stock' ? 'Out of Stock' : 'In Stock';await pool.query("UPDATE products SET status=$1 WHERE id=$2", [nextStatus, req.params.id]);}res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/delete/:id', isAdmin, async (req, res) => {try {await pool.query("DELETE FROM products WHERE id=$1", [req.params.id]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/contact/update', isAdmin, async (req, res) => {try {await pool.query("UPDATE contact_info SET phone=$1, email=$2, address=$3 WHERE id=1", [req.body.phone, req.body.email, req.body.address]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});const PORT = process.env.PORT || 3000;app.listen(PORT, () => console.log("Mware Postgres Engine running on port " + PORT));
