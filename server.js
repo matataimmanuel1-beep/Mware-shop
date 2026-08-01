@@ -44,7 +44,6 @@ async function initDatabase() {
         await pool.query("CREATE TABLE IF NOT EXISTS products (id BIGINT PRIMARY KEY, name TEXT, price NUMERIC, currency TEXT, status TEXT, image TEXT);");
         await pool.query("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, customer_email TEXT, full_name TEXT, shipping_address TEXT, gateway_method TEXT, items TEXT, total TEXT, currency TEXT, status TEXT, date TEXT);");
 
-        // Create default admin if it doesn't exist
         const adminExists = await pool.query("SELECT 1 FROM users WHERE role='admin' LIMIT 1");
         if (adminExists.rows.length === 0) {
             await pool.query("INSERT INTO users (email, phone, password, role) VALUES ('admin@mwareshop.com', '123456789', 'adminpassword', 'admin')");
@@ -59,13 +58,11 @@ async function initDatabase() {
 
 initDatabase();
 
-// ====================== RESTORE RAILWAY DATA (FIXED FOR RAILWAY) ======================
 function restoreRailwayBackup() {
     const backupPath = path.join(__dirname, 'mware-shop-backup/railway_backup.dump');
     try {
         if (fs.existsSync(backupPath)) {
             console.log("🔄 Restoring your Railway backup...");
-            // IMPORTANT: Railway often uses a different database name
             execSync(`pg_restore -U postgres -h localhost -p 5432 -d mware-shop ${backupPath}`, { stdio: 'inherit' });
             console.log("✅ Railway data restored successfully!");
         } else {
@@ -76,7 +73,6 @@ function restoreRailwayBackup() {
     }
 }
 
-// Run restore after DB setup
 setTimeout(() => {
     restoreRailwayBackup();
 }, 1500);
@@ -197,7 +193,7 @@ app.post('/checkout/pay', async (req, res) => {
 });
 
 // ====================== LOGIN ======================
-app.get('/login', (req, res) => res.render('login', { error: null }));
+app.get('/login', (req, res) => res.render('login', { message: null }));
 
 app.post('/login/customer', async (req, res) => {
     const { email, password } = req.body;
@@ -207,7 +203,7 @@ app.post('/login/customer', async (req, res) => {
             req.session.user = { email: found.rows[0].email, role: 'customer' };
             return res.redirect('/');
         }
-        res.render('login', { error: 'Invalid client credentials.' });
+        res.render('login', { message: 'Invalid client credentials.' });
     } catch (e) { 
         res.status(500).send(e.toString()); 
     }
@@ -221,7 +217,7 @@ app.post('/login/admin', async (req, res) => {
             req.session.user = { email: found.rows[0].email, role: 'admin' };
             return res.redirect('/admin');
         }
-        res.render('login', { error: 'Administrative Access Key Refused.' });
+        res.render('login', { message: 'Administrative Access Key Refused.' });
     } catch (e) { 
         res.status(500).send(e.toString()); 
     }
