@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Commerce Digital Storefront Showcase</title>
+    <title>WELCOME TO MWARE SHOP</title>
     <link href="https://cloudflare.com" rel="stylesheet">
     <style>
         :root {
@@ -32,9 +32,9 @@
 <body class="<%= theme %>">
 
     <header class="top-navbar">
-        <h2 style="margin: 0; cursor: pointer;" onclick="window.location.href='/'">Kenya Retail Flow Pipeline</h2>
+        <h2 style="margin: 0; cursor: pointer;" onclick="window.location.href='/'">Mware shop</h2>
         <nav class="navbar-links">
-            <a href="/"><i class="fa fa-store"></i> Market Grid</a>
+            <a href="/"><i class="fa fa-store"></i> HOME</a>
             <% if (user) { %>
                 <a href="/orders"><i class="fa fa-boxes"></i> Account Orders</a>
                 <% if (user.role === 'admin') { %>
@@ -51,12 +51,12 @@
         <div class="theme-selector-box">
             <span><strong>Select Storefront Theme Layout Profile Canvas:</strong></span>
             <button onclick="applyThemeProfile('default')" class="action-button" style="width:auto; margin:0; background:#059669;">Standard Default</button>
-            <button onclick="applyThemeProfile('christmas')" class="action-button" style="width:auto; margin:0; background:#dc2626;">Yule Holidays</button>
-            <button onclick="applyThemeProfile('diwali')" class="action-button" style="width:auto; margin:0; background:#d97706;">Diwali Lights</button>
+            <button onclick="applyThemeProfile('christmas')" class="action-button" style="width:auto; margin:0; background:#f3f4f6; color:#1f2937;">Light Mode</button>
+            <button onclick="applyThemeProfile('diwali')" class="action-button" style="width:auto; margin:0; background:#1f2937; color:#f9fafb;">Dark Mode</button>
         </div>
 
         <% if (activeTab === 'home') { %>
-            <h3>Available In-Stock General Merchandise Options</h3>
+            <h3>Available In-Stock  Options</h3>
             <div class="product-deck">
                 <% products.forEach(product => { %>
                     <div class="product-module">
