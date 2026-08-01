@@ -44,7 +44,7 @@ async function initDatabase() {
         await pool.query("CREATE TABLE IF NOT EXISTS products (id BIGINT PRIMARY KEY, name TEXT, price NUMERIC, currency TEXT, status TEXT, image TEXT);");
         await pool.query("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, customer_email TEXT, full_name TEXT, shipping_address TEXT, gateway_method TEXT, items TEXT, total TEXT, currency TEXT, status TEXT, date TEXT);");
 
-        // Create default admin if it doesn't exist (only on fresh installs)
+        // Create default admin if it doesn't exist
         const adminExists = await pool.query("SELECT 1 FROM users WHERE role='admin' LIMIT 1");
         if (adminExists.rows.length === 0) {
             await pool.query("INSERT INTO users (email, phone, password, role) VALUES ('admin@mwareshop.com', '123456789', 'adminpassword', 'admin')");
@@ -59,12 +59,13 @@ async function initDatabase() {
 
 initDatabase();
 
-// Restore your Railway data on every startup (uses the backup you exported earlier)
+// ====================== RESTORE RAILWAY DATA (FIXED FOR RAILWAY) ======================
 function restoreRailwayBackup() {
     const backupPath = path.join(__dirname, 'mware-shop-backup/railway_backup.dump');
     try {
         if (fs.existsSync(backupPath)) {
             console.log("🔄 Restoring your Railway backup...");
+            // IMPORTANT: Railway often uses a different database name
             execSync(`pg_restore -U postgres -h localhost -p 5432 -d mware-shop ${backupPath}`, { stdio: 'inherit' });
             console.log("✅ Railway data restored successfully!");
         } else {
@@ -78,12 +79,12 @@ function restoreRailwayBackup() {
 // Run restore after DB setup
 setTimeout(() => {
     restoreRailwayBackup();
-}, 1000);
+}, 1500);
 
 // ====================== HOLIDAY THEME ======================
 function getHolidayTheme() {
     const now = new Date();
-    const month = now.getMonth() + 1;
+    const month = now.getMonth() + 1; 
     const day = now.getDate();
     if (month === 12) return { name: 'Christmas Spectacular', bg: '#14532d', cardBg: '#052e16', text: '#f8fafc', accent: '#ef4444', btn: '#dc2626' };
     if (month === 10 && day >= 15) return { name: 'Spooky Halloween', bg: '#1c1917', cardBg: '#292524', text: '#ffedd5', accent: '#f97316', btn: '#ea580c' };
