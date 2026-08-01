@@ -223,7 +223,6 @@ app.get('/admin', isAdmin, async (req, res) => {
     }
 });
 
-// Admin actions
 app.post('/admin/orders/update-status', isAdmin, async (req, res) => {
     try {
         await pool.query("UPDATE orders SET status=$1 WHERE id=$2", [req.body.targetStatus, req.body.orderId]);
