@@ -1,190 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Mware Shop</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Digital Storefront Showcase</title>
+    <link href="https://cloudflare.com" rel="stylesheet">
     <style>
-        body { background: <%= theme.bg %>; color: <%= theme.text %>; font-family: sans-serif; margin: 0; padding-bottom: 50px; }
-        nav { background: #020617; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid <%= theme.accent %>; }
-        .logo { font-size: 22px; font-weight: 900; color: #fff; text-decoration: none; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: bold; }
-        .badge { background: <%= theme.accent %>; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; }
-        .box { background: <%= theme.cardBg %>; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .prod-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; }
-        .prod-card img { width: 100%; height: 160px; object-fit: cover; }
-        .p-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .card-title { font-size: 16px; font-weight: bold; color: white; margin-bottom: 8px; }
-        .price { font-family: monospace; font-size: 18px; color: <%= theme.accent %>; font-weight: bold; margin: 5px 0; }
-        .status { padding: 2px 6px; font-size: 11px; font-weight: bold; background: rgba(34,197,94,0.2); color: #4ade80; border-radius: 4px; width: max-content; }
-        .status.out { background: rgba(239,68,68,0.2); color: #f87171; }
-        .btn { width: 100%; padding: 10px; background: <%= theme.btn %>; border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        .qr-img { background: #fff; padding: 6px; border-radius: 6px; width: 130px; height: 130px; margin: 10px auto; display: block; }
-        .form-group { margin-bottom: 12px; text-align: left; }
-        label { display: block; font-size: 12px; margin-bottom: 4px; color: #94a3b8; font-weight: bold; }
-        input, select, textarea { width: 100%; box-sizing: border-box; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: white; font-family: inherit; }
-        .split-checkout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media(max-width: 768px) { .split-checkout { grid-template-columns: 1fr; } .container { grid-template-columns: 1fr; } }
-        .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; border-bottom: 1px dashed #334155; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-top: 15px; }
-        th, td { padding: 12px 10px; border-bottom: 1px solid #334155; }
-        th { color: #94a3b8; font-weight: bold; background: #0f172a; }
-        h2, h3 { margin-top: 0; color: #fff; }
+        :root {
+            --primary-action: #059669;
+            --layout-bg: #f3f4f6;
+            --surface-box: #ffffff;
+            --text-main: #1f2937;
+        }
+        /* Theme configurations parsing structure engine styles */
+        body.christmas { --primary-action: #dc2626; --layout-bg: #fef2f2; }
+        body.diwali { --primary-action: #d97706; --layout-bg: #fffbeb; }
+        
+        body { font-family: system-ui, sans-serif; background: var(--layout-bg); margin: 0; color: var(--text-main); }
+        .top-navbar { background: #111827; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar-links a { color: white; text-decoration: none; margin-left: 20px; }
+        .showcase-wrapper { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .product-deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .product-module { background: var(--surface-box); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .product-image { width: 100%; height: 200px; object-fit: cover; background: #e5e7eb; }
+        .product-details { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .action-button { background: var(--primary-action); color: white; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .action-button:disabled { background: #9ca3af; cursor: not-allowed; }
+        .theme-selector-box { background: #ffffff; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: flex; gap: 15px; align-items: center; }
     </style>
 </head>
-<body>
-    <nav>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <a href="/" class="logo">MWARE SHOP</a>
-            <span style="font-size:10px; background:<%= theme.accent %>; color:#000; padding:2px 6px; border-radius:4px; font-weight:bold;"><%= theme.name %></span>
-        </div>
-        <div class="nav-links">
-            <a href="/">Catalog</a>
-            <a href="/checkout">Cart <span class="badge"><%= cartCount %></span></a>
-            <% if (user) { %>
-                <% if (user.role === 'admin') { %><a href="/admin" style="color:#fbbf24;">Admin Panel</a><% } %>
-                <a href="/profile" style="color:<%= theme.accent %>;">My Account</a>
-                <a href="/logout" style="background:#334155; padding:4px 10px; border-radius:4px;">Logout</a>
-            <% } else { %>
-                <a href="/login" style="background:<%= theme.btn %>; padding:6px 15px; border-radius:4px;">Login</a>
-            <% } %>
-        </div>
-    </nav>
+<body class="<%= theme %>">
 
-    <div class="container">
-        <div>
-            <% if (activeTab === 'shop') { %>
-                <h2>Available Inventory</h2>
-                <div class="grid">
-                    <% products.forEach(p => { %>
-                        <div class="prod-card">
-                            <img src="<%= p.image %>" alt="<%= p.name %>">
-                            <div class="p-body">
-                                <div>
-                                    <div class="card-title"><%= p.name %></div>
-                                    <div class="price"><%= p.price %> <%= p.currency %></div>
-                                    <div class="status <%= p.status !== 'In Stock' ? 'out' : '' %>"><%= p.status %></div>
-                                </div>
-                                <form action="/cart/add" method="POST" style="margin-top: 15px;">
-                                    <input type="hidden" name="productId" value="<%= p.id %>">
-                                    <button type="submit" class="btn" style="background:<%= theme.btn %>;">Add to Cart</button>
-                                </form>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-            <% } else if (activeTab === 'checkout') { %>
-                <h2>Secure Checkout Gateway</h2>
-                <% if (cart.length === 0) { %>
-                    <div class="box"><p style="margin:0; color:#94a3b8;">Your shopping cart is currently empty.</p></div>
-                <% } else { %>
-                    <div class="split-checkout">
-                        <div class="box">
-                            <h3>Shipping Form</h3>
-                            <form action="/checkout/pay" method="POST">
-                                <input type="hidden" name="totalAmount" value="<%= financials.total %>">
-                                <input type="hidden" name="totalCurrency" value="<%= financials.currency %>">
-                                <div class="form-group"><label>Recipient Full Name</label><input type="text" name="fullName" required></div>
-                                <div class="form-group"><label>Shipping Address</label><textarea name="shippingAddress" rows="2" required></textarea></div>
-                                <div class="form-group"><label>Payment Method</label><select name="gatewayMethod">
-                                    <option value="M-Pesa Express">M-Pesa Mobile Money</option>
-                                    <option value="Credit Card">Visa / Mastercard</option>
-                                </select></div>
-                                <button type="submit" class="btn" style="background:#10b981;">Place Order</button>
-                            </form>
-                        </div>
-                        <div class="box" style="display:flex; flex-direction:column; justify-content:space-between;">
+    <header class="top-navbar">
+        <h2 style="margin: 0; cursor: pointer;" onclick="window.location.href='/'">Kenya Retail Flow Pipeline</h2>
+        <nav class="navbar-links">
+            <a href="/"><i class="fa fa-store"></i> Market Grid</a>
+            <% if (user) { %>
+                <a href="/orders"><i class="fa fa-boxes"></i> Account Orders</a>
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin" style="color: #fbbf24;"><i class="fa fa-user-shield"></i> Control Matrix</a>
+                <% } %>
+                <a href="/logout" style="color: #f87171;"><i class="fa fa-sign-out-alt"></i> Out</a>
+            <% } else { %>
+                <a href="/login"><i class="fa fa-sign-in-alt"></i> Access Gateway</a>
+            <% } %>
+        </nav>
+    </header>
+
+    <main class="showcase-wrapper">
+        <div class="theme-selector-box">
+            <span><strong>Select Storefront Theme Layout Profile Canvas:</strong></span>
+            <button onclick="applyThemeProfile('default')" class="action-button" style="width:auto; margin:0; background:#059669;">Standard Default</button>
+            <button onclick="applyThemeProfile('christmas')" class="action-button" style="width:auto; margin:0; background:#dc2626;">Yule Holidays</button>
+            <button onclick="applyThemeProfile('diwali')" class="action-button" style="width:auto; margin:0; background:#d97706;">Diwali Lights</button>
+        </div>
+
+        <% if (activeTab === 'home') { %>
+            <h3>Available In-Stock General Merchandise Options</h3>
+            <div class="product-deck">
+                <% products.forEach(product => { %>
+                    <div class="product-module">
+                        <img src="<%= product.image_url %>" class="product-image" onerror="this.src='/uploads/default.jpg'" alt="Asset Image View">
+                        <div class="product-details">
                             <div>
-                                <h3>Order Details</h3>
-                                <div style="max-height:120px; overflow-y:auto;">
-                                    <% cart.forEach(c => { %>
-                                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
-                                            <span style="color:#cbd5e1;"><%= c.name %></span>
-                                            <span style="font-family:monospace;"><%= c.price %> <%= financials.currency %></span>
-                                        </div>
-                                    <% }) %>
-                                </div>
+                                <h4 style="margin: 0 0 10px 0;"><%= product.name %></h4>
+                                <p style="font-size: 14px; color: #4b5563; margin: 0 0 15px 0;"><%= product.description %></p>
                             </div>
-                            <div style="border-top:1px solid #334155; padding-top:6px;">
-                                <div class="summary-row"><span>Subtotal:</span><span><%= financials.subtotal %></span></div>
-                                <div class="summary-row"><span>Shipping:</span><span><%= financials.shipping %></span></div>
-                                <div class="summary-row"><span>Tax (16%):</span><span><%= financials.tax %></span></div>
-                                <div class="summary-row" style="border:none; font-size:16px; font-weight:bold; color:white; margin-top:6px;">
-                                    <span>Total Due:</span><span><%= financials.total %> <%= financials.currency %></span>
-                                </div>
+                            <div>
+                                <strong style="font-size: 18px; color: #111827;">Ksh <%= product.price %></strong>
+                                <button class="action-button" 
+                                        onclick="executeDirectCheckout('<%= product.price %>')"
+                                        <%= product.status !== 'In Stock' ? 'disabled' : '' %>>
+                                    <%= product.status === 'In Stock' ? 'Instant Purchase Settlement' : 'Stock Exhausted' %>
+                                </button>
                             </div>
                         </div>
                     </div>
-                <% } %>
-            <% } else if (activeTab === 'profile') { %>
-                <h2>Client Self-Service Dashboard</h2>
-                <div class="box">
-                    <h3>My Orders Tracking Hub</h3>
-                    <% if (!customerOrders || customerOrders.length === 0) { %>
-                        <p style="color:#94a3b8; margin:0;">No orders placed yet.</p>
-                    <% } else { %>
-                        <div style="overflow-x: auto;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Order ID</th>
-                                        <th>Date</th>
-                                        <th>Items</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% customerOrders.forEach(ord => { %>
-                                        <tr>
-                                            <td style="font-family:monospace; color:#fff; font-weight:bold;"><%= ord.id %></td>
-                                            <td><%= ord.date %></td>
-                                            <td><%= ord.items %></td>
-                                            <td style="font-family:monospace; color:#fbbf24;"><%= ord.total %> <%= ord.currency %></td>
-                                            <td><span style="padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px;
-                                                background: <%= ord.status==='Delivered' ? 'rgba(34,197,94,0.15)' : ord.status==='Shipped' ? 'rgba(59,130,246,0.15)' : 'rgba(234,179,8,0.15)' %>;
-                                                color: <%= ord.status==='Delivered' ? '#4ade80' : ord.status==='Shipped' ? '#60a5fa' : '#facc15' %>;">
-                                                <%= ord.status %>
-                                            </span></td>
-                                            <td>
-                                                <form action="/orders/update-status" method="POST" style="display:inline-flex; gap:4px;">
-                                                    <input type="hidden" name="orderId" value="<%= ord.id %>">
-                                                    <select name="targetStatus" style="padding:2px; font-size:11px; width:auto;">
-                                                        <option value="Pending">Pending</option>
-                                                        <option value="Shipped">Shipped</option>
-                                                        <option value="Delivered">Delivered</option>
-                                                    </select>
-                                                    <button type="submit" class="btn" style="padding:4px 10px; font-size:11px; background:#2563eb;">Set</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                </tbody>
-                            </table>
-                        </div>
-                    <% } %>
-                </div>
-            <% } %>
-        </div>
-
-        <div>
-            <div class="box">
-                <h4 style="margin:0 0 10px 0; font-size:12px; color:#94a3b8; text-transform:uppercase;">Store Support</h4>
-                <div style="font-size:13px; font-family:monospace; line-height:1.6; color:#cbd5e1;">
-                    <% if (contactInfo && contactInfo.length > 0) { %>
-                        <strong>Ph:</strong> <%= contactInfo[0].phone %><br>
-                        <strong>Em:</strong> <%= contactInfo[0].email %><br>
-                        <strong>HQ:</strong> <%= contactInfo[0].address %>
-                    <% } else if (contactInfo && contactInfo.phone) { %>
-                        <strong>Ph:</strong> <%= contactInfo.phone %><br>
-                        <strong>Em:</strong> <%= contactInfo.email %><br>
-                        <strong>HQ:</strong> <%= contactInfo.address %>
-                    <% } %>
-                </div>
+                <% }) %>
             </div>
-        </div>
-    </div>
+        <% } else if (activeTab === 'orders') { %>
+            <h3>Personal Account Historical Ledger Purchases</h3>
+            <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #e5e7eb; text-align: left;">
+                            <th style="padding: 12px;">Transaction Log ID</th>
+                            <th style="padding: 12px;">Financial Commitment</th>
+                            <th style="padding: 12px;">Processing Framework Stage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(order => { %>
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 12px;">#TXN-<%= order.id %></td>
+                                <td style="padding: 12px;">Ksh <%= order.total_amount %></td>
+                                <td style="padding: 12px;">
+                                    <span style="padding: 4px 8px; border-radius: 4px; font-weight: bold; background: #f3f4f6;">
+                                        <%= order.status %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </main>
+
+    <script>
+        function applyThemeProfile(themeName) {
+            fetch('/theme/switch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ theme: themeName })
+            })
+            .then(res => res.json())
+            .then(data => { if(data.success) window.location.reload(); });
+        }
+
+        function executeDirectCheckout(itemValuationCost) {
+            <% if (!user) { %>
+                window.location.href = '/login';
+                return;
+            <% } %>
+
+            if(!confirm("Authorize checkout allocation execution sequence for Ksh " + itemValuationCost + "?")) return;
+
+            fetch('/orders/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: itemValuationCost })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.success) window.location.href = '/orders';
+            });
+        }
+    </script>
 </body>
 </html>
+
