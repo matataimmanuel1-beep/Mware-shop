@@ -66,9 +66,9 @@
                                     <div class="price"><%= p.price %> <%= p.currency %></div>
                                     <div class="status <%= p.status !== 'In Stock' ? 'out' : '' %>"><%= p.status %></div>
                                 </div>
-                                <form action="/cart/add" method="POST">
+                                <form action="/cart/add" method="POST" style="margin-top: 15px;">
                                     <input type="hidden" name="productId" value="<%= p.id %>">
-                                    <button type="submit" class="btn" <%= p.status !== 'In Stock' ? 'disabled' : '' %>>Buy Now</button>
+                                    <button type="submit" class="btn" style="background:<%= theme.btn %>;">Add to Cart</button>
                                 </form>
                             </div>
                         </div>
@@ -85,25 +85,15 @@
                             <form action="/checkout/pay" method="POST">
                                 <input type="hidden" name="totalAmount" value="<%= financials.total %>">
                                 <input type="hidden" name="totalCurrency" value="<%= financials.currency %>">
-                                <div class="form-group">
-                                    <label>Recipient Full Name</label>
-                                    <input type="text" name="fullName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Shipping Address</label>
-                                    <textarea name="shippingAddress" rows="2" required></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>Payment Method</label>
-                                    <select name="gatewayMethod">
-                                        <option value="M-Pesa Express">M-Pesa Mobile Money</option>
-                                        <option value="Credit Card">Visa / Mastercard</option>
-                                    </select>
-                                </div>
+                                <div class="form-group"><label>Recipient Full Name</label><input type="text" name="fullName" required></div>
+                                <div class="form-group"><label>Shipping Address</label><textarea name="shippingAddress" rows="2" required></textarea></div>
+                                <div class="form-group"><label>Payment Method</label><select name="gatewayMethod">
+                                    <option value="M-Pesa Express">M-Pesa Mobile Money</option>
+                                    <option value="Credit Card">Visa / Mastercard</option>
+                                </select></div>
                                 <button type="submit" class="btn" style="background:#10b981;">Place Order</button>
                             </form>
                         </div>
-
                         <div class="box" style="display:flex; flex-direction:column; justify-content:space-between;">
                             <div>
                                 <h3>Order Details</h3>
@@ -129,7 +119,6 @@
                 <% } %>
             <% } else if (activeTab === 'profile') { %>
                 <h2>Client Self-Service Dashboard</h2>
-                
                 <div class="box">
                     <h3>My Orders Tracking Hub</h3>
                     <% if (!customerOrders || customerOrders.length === 0) { %>
@@ -141,7 +130,46 @@
                                     <tr>
                                         <th>Order ID</th>
                                         <th>Date</th>
-        <aside style="display:flex; flex-direction:column; gap:20px;">
+                                        <th>Items</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% customerOrders.forEach(ord => { %>
+                                        <tr>
+                                            <td style="font-family:monospace; color:#fff; font-weight:bold;"><%= ord.id %></td>
+                                            <td><%= ord.date %></td>
+                                            <td><%= ord.items %></td>
+                                            <td style="font-family:monospace; color:#fbbf24;"><%= ord.total %> <%= ord.currency %></td>
+                                            <td><span style="padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px;
+                                                background: <%= ord.status==='Delivered' ? 'rgba(34,197,94,0.15)' : ord.status==='Shipped' ? 'rgba(59,130,246,0.15)' : 'rgba(234,179,8,0.15)' %>;
+                                                color: <%= ord.status==='Delivered' ? '#4ade80' : ord.status==='Shipped' ? '#60a5fa' : '#facc15' %>;">
+                                                <%= ord.status %>
+                                            </span></td>
+                                            <td>
+                                                <form action="/orders/update-status" method="POST" style="display:inline-flex; gap:4px;">
+                                                    <input type="hidden" name="orderId" value="<%= ord.id %>">
+                                                    <select name="targetStatus" style="padding:2px; font-size:11px; width:auto;">
+                                                        <option value="Pending">Pending</option>
+                                                        <option value="Shipped">Shipped</option>
+                                                        <option value="Delivered">Delivered</option>
+                                                    </select>
+                                                    <button type="submit" class="btn" style="padding:4px 10px; font-size:11px; background:#2563eb;">Set</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+
+        <div>
             <div class="box">
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#94a3b8; text-transform:uppercase;">Store Support</h4>
                 <div style="font-size:13px; font-family:monospace; line-height:1.6; color:#cbd5e1;">
@@ -153,15 +181,10 @@
                         <strong>Ph:</strong> <%= contactInfo.phone %><br>
                         <strong>Em:</strong> <%= contactInfo.email %><br>
                         <strong>HQ:</strong> <%= contactInfo.address %>
-                    <% } else { %>
-                        <strong>Ph:</strong> +254 700 000 000<br>
-                        <strong>Em:</strong> support@mwareshop.com<br>
-                        <strong>HQ:</strong> Mombasa, Kenya
                     <% } %>
                 </div>
             </div>
-        </aside>
+        </div>
     </div>
 </body>
 </html>
-

@@ -1,81 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Portal Entry - Mware Shop</title>
+    <meta charset="UTF-8">
+    <title>Login - Mware Shop</title>
     <style>
-        body { background: <%= theme.bg %>; color: <%= theme.text %>; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: <%= theme.cardBg %>; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 360px; border: 2px solid <%= theme.accent %>; text-align: center; }
-        h2 { margin: 0; font-size: 26px; font-weight: 900; text-transform: uppercase; color: #fff; }
-        .tab-bar { display: flex; margin: 20px 0; border-bottom: 1px solid #475569; }
-        .tab { flex: 1; padding: 10px; background: none; border: none; color: #94a3b8; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; font-size: 12px; text-transform: uppercase; }
-        .tab.active { color: #fff; border-bottom-color: <%= theme.accent %>; }
-        .group { text-align: left; margin-bottom: 12px; }
-        label { display: block; font-size: 11px; margin-bottom: 4px; color: #cbd5e1; font-weight: bold; text-transform: uppercase; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; background: #334155; border: 1px solid #475569; border-radius: 6px; color: #fff; }
-        .btn { width: 100%; padding: 12px; background: <%= theme.btn %>; border: none; border-radius: 6px; color: #fff; font-weight: bold; cursor: pointer; margin-top: 10px; text-transform: uppercase; }
-        .error { background: rgba(220,38,38,0.2); border: 1px solid #ef4444; color: #fca5a5; font-size: 12px; padding: 8px; border-radius: 6px; margin-bottom: 15px; }
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 40px 20px; }
+        .container { max-width: 420px; margin: 40px auto; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        h1 { text-align: center; color: #fbbf24; margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        label { display: block; font-size: 13px; margin-bottom: 5px; color: #94a3b8; font-weight: bold; }
+        input, textarea, select { width: 100%; box-sizing: border-box; padding: 12px; background: #334155; border: 1px solid #475569; border-radius: 6px; color: white; font-family: inherit; }
+        .btn { width: 100%; padding: 14px; background: #4f46e5; border: none; color: white; font-weight: bold; font-size: 16px; border-radius: 8px; cursor: pointer; }
+        .btn:hover { background: #6366f1; }
+        .alert { background: rgba(234,179,8,0.2); color: #fbbf24; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
+        a { color: #60a5fa; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .footer-note { text-align: center; font-size: 12px; color: #64748b; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Mware Shop</h2>
-        <div style="font-size:10px; color:<%= theme.accent %>; font-weight:bold; margin-top:4px;"><%= theme.name %> active</div>
+    <div class="container">
+        <h1>🔑 Login</h1>
+        
+        <% if (message) { %>
+            <div class="alert"><%= message %></div>
+        <% } %>
 
-        <% if (error) { %><div class="error"><%= error %></div><% } %>
-
-        <div class="tab-bar">
-            <button id="t-login" class="tab active" onclick="setMode('login')">Sign In</button>
-            <button id="t-signup" class="tab" onclick="setMode('signup')">Register</button>
-            <button id="t-admin" class="tab" onclick="setMode('admin')">Admin</button>
-        </div>
-
-        <form id="authForm" action="/login/customer" method="POST">
-            <div id="email-field" class="group">
-                <label>Account Email</label>
-                <input type="email" name="email" id="inp-email" required>
+        <!-- Standard Login Form -->
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="you@example.com" required>
             </div>
-            <div id="phone-field" class="group" style="display:none;">
-                <label>Phone Route</label>
-                <input type="text" name="phone" id="inp-phone">
-            </div>
-            <div class="group">
+            <div class="form-group">
                 <label>Password</label>
                 <input type="password" name="password" required>
             </div>
-            <button type="submit" id="subBtn" class="btn">Enter Storefront</button>
+            <button type="submit" class="btn">Sign In</button>
         </form>
+
+        <!-- Forgot Password / Reset Link -->
+        <div style="text-align: center; margin: 20px 0; font-size: 13px; color: #94a3b8;">
+            <a href="/forgot-password">Forgot your password?</a>
+        </div>
+
+        <!-- Password Reset Form (for logged-in users) -->
+        <% if (user) { %>
+            <hr style="border-color: #334155; margin: 20px 0;">
+            <form action="/reset-password" method="POST" style="background: #0f172a; padding: 15px; border-radius: 8px;">
+                <h3 style="margin: 0 0 12px 0; text-align: center; color: #fbbf24;">Reset My Password</h3>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" name="newPassword" required>
+                </div>
+                <button type="submit" class="btn" style="background: #10b981;">Save New Password</button>
+            </form>
+        <% } %>
     </div>
-
-    <script>
-        function setMode(type) {
-            const form = document.getElementById('authForm');
-            const subBtn = document.getElementById('subBtn');
-            const emailF = document.getElementById('email-field');
-            const phoneF = document.getElementById('phone-field');
-            
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('t-' + type).classList.add('active');
-
-            phoneF.style.display = "none";
-            document.getElementById('inp-phone').required = false;
-            document.getElementById('inp-email').required = true;
-
-            if (type === 'login') {
-                form.action = '/login/customer';
-                subBtn.textContent = 'Enter Storefront';
-                emailF.style.display = "block";
-            } else if (type === 'signup') {
-                form.action = '/login/signup';
-                subBtn.textContent = 'Create Client Account';
-                emailF.style.display = "block";
-                phoneF.style.display = "block";
-                document.getElementById('inp-phone').required = true;
-            } else {
-                form.action = '/login/admin';
-                subBtn.textContent = 'Access Administration Panel';
-                emailF.style.display = "block";
-            }
-        }
-    </script>
 </body>
 </html>
