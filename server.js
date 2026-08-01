@@ -13,10 +13,13 @@ const pool = new Pool({
 });
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => { cb(null, path.join(__dirname, 'public/uploads/')); },
-    filename: (req, file, cb) => { cb(null, Date.now() + path.extname(file.originalname)); }
+    destination: (req, file, cb) => { 
+        cb(null, path.join(__dirname, 'public/uploads/')); 
+    },
+    filename: (req, file, cb) => { 
+        cb(null, Date.now() + path.extname(file.originalname)); 
+    }
 });
-
 const upload = multer({ storage: storage });
 
 app.set('view engine', 'ejs');
@@ -37,11 +40,10 @@ async function initDatabase() {
         await pool.query("CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, phone TEXT, password TEXT, role TEXT);");
         await pool.query("CREATE TABLE IF NOT EXISTS products (id BIGINT PRIMARY KEY, name TEXT, price NUMERIC, currency TEXT, status TEXT, image TEXT);");
         await pool.query("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, customer_email TEXT, full_name TEXT, shipping_address TEXT, gateway_method TEXT, items TEXT, total TEXT, currency TEXT, status TEXT, date TEXT);");
-
+        
         await pool.query("INSERT INTO contact_info (id, phone, email, address) VALUES (1, '+254 700 000 000', 'support@mwareshop.com', 'Mombasa, Kenya') ON CONFLICT DO NOTHING;");
         await pool.query("INSERT INTO users (email, phone, password, role) VALUES ('admin@mwareshop.com', '123456789', 'adminpassword', 'admin') ON CONFLICT DO NOTHING;");
         await pool.query("INSERT INTO products (id, name, price, currency, status, image) VALUES (1, 'Mware Edition Watch', 129.99, 'USD', 'In Stock', 'https://unsplash.com') ON CONFLICT DO NOTHING;");
-
         console.log("PostgreSQL Database Schema Connected Perfectly.");
     } catch (err) { 
         console.error("Database Setup Failure: ", err); 
