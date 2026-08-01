@@ -5,7 +5,7 @@ const QRCode = require('qrcode');
 const path = require('path');
 const { Pool } = require('pg');
 
-const app = express();
+const app = report = express();
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -42,9 +42,10 @@ async function initDatabase() {
         
         await pool.query("INSERT INTO contact_info (id, phone, email, address) VALUES (1, '+254 700 000 000', 'support@mwareshop.com', 'Mombasa, Kenya') ON CONFLICT DO NOTHING;");
         await pool.query("INSERT INTO users (email, phone, password, role) VALUES ('admin@mwareshop.com', '123456789', 'adminpassword', 'admin') ON CONFLICT DO NOTHING;");
-        console.log("PostgreSQL Database Connected.");
+        await pool.query("INSERT INTO products (id, name, price, currency, status, image) VALUES (1, 'Mware Edition Watch', 129.99, 'USD', 'In Stock', 'https://unsplash.com') ON CONFLICT DO NOTHING;");
+        console.log("PostgreSQL Database Schema Connected Perfectly.");
     } catch (err) { 
-        console.error("Database Error: ", err); 
+        console.error("Database Setup Failure: ", err); 
     }
 }
 initDatabase();
@@ -78,7 +79,11 @@ app.get('/', async (req, res) => {
     try {
         const prodRes = await pool.query("SELECT * FROM products ORDER BY id DESC");
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");
-        res.render('dashboard', { products: prodRes.rows, contactInfo: contactRes.rows[0], activeTab: 'shop', error: null, success: null });
+        
+        // Fix: Extract single row entry dict fallback
+        const singleContact = contactRes.rows.length > 0 ? contactRes.rows[0] : { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' };
+        
+        res.render('dashboard', { products: prodRes.rows, contactInfo: singleContact, activeTab: 'shop', error: null, success: null });
     } catch (e) { 
         res.status(500).send(e.toString()); 
     }
@@ -90,7 +95,11 @@ app.get('/profile', async (req, res) => {
         const userRes = await pool.query("SELECT * FROM users WHERE email=$1", [req.session.user.email]);
         const orderRes = await pool.query("SELECT * FROM orders WHERE customer_email=$1 ORDER BY id DESC", [req.session.user.email]);
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");
-        res.render('dashboard', { products: [], contactInfo: contactRes.rows[0], activeTab: 'profile', account: userRes.rows[0], customerOrders: orderRes.rows, error: null, success: null });
+        
+        const singleContact = contactRes.rows.length > 0 ? contactRes.rows[0] : { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' };
+        const singleAccount = userRes.rows.length > 0 ? userRes.rows[0] : { email: req.session.user.email };
+
+        res.render('dashboard', { products: [], contactInfo: singleContact, activeTab: 'profile', account: singleAccount, customerOrders: orderRes.rows, error: null, success: null });
     } catch (e) { 
         res.status(500).send(e.toString()); 
     }
@@ -101,11 +110,15 @@ app.post('/profile/update', async (req, res) => {
     const { identity, verificationCode, newPassword } = req.body;
     try {
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");
+        const singleContact = contactRes.rows.length > 0 ? contactRes.rows[0] : { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' };
+        
         const userCheck = await pool.query("SELECT * FROM users WHERE email=$1 OR phone=$1", [identity]);
-        
-        if (userCheck.rows.length === 0) return res.render('dashboard', { products: [], contactInfo: contactRes.rows[0], activeTab: 'profile', account: { email: req.session.user.email }, customerOrders: [], error: 'Identifier mismatch.', success: null });
-        if (verificationCode !== '1234') return res.render('dashboard', { products: [], contactInfo: contactRes.rows[0], activeTab: 'profile', account: userCheck.rows[0], customerOrders: [], error: 'Invalid verification token.', success: null });
-        
+        if (userCheck.rows.length === 0) {
+            return res.render('dashboard', { products: [], contactInfo: singleContact, activeTab: 'profile', account: { email: req.session.user.email }, customerOrders: [], error: 'Identifier footprint collision mismatch.', success: null });
+        }
+        if (verificationCode !== '1234') {
+            return res.render('dashboard', { products: [], contactInfo: singleContact, activeTab: 'profile', account: userCheck.rows[0], customerOrders: [], error: 'Verification code token challenge failed.', success: null });
+        }
         await pool.query("UPDATE users SET password=$1 WHERE email=$2", [newPassword, userCheck.rows[0].email]);
         res.redirect('/profile');
     } catch (e) { 
@@ -132,7 +145,8 @@ app.get('/checkout', async (req, res) => {
     const financials = { subtotal: subtotal.toFixed(2), shipping: (cart.length > 0 ? 150 : 0).toFixed(2), tax: (subtotal * 0.16).toFixed(2), total: (subtotal * 1.16 + (cart.length > 0 ? 150 : 0)).toFixed(2), currency: currencySymbol };
     try {
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");
-        res.render('dashboard', { cart, contactInfo: contactRes.rows[0], activeTab: 'checkout', error: null, success: null, financials });
+        const singleContact = contactRes.rows.length > 0 ? contactRes.rows[0] : { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' };
+        res.render('dashboard', { cart, contactInfo: singleContact, activeTab: 'checkout', error: null, success: null, financials });
     } catch (e) { 
         res.status(500).send(e.toString()); 
     }
@@ -140,12 +154,15 @@ app.get('/checkout', async (req, res) => {
 
 app.post('/checkout/pay', async (req, res) => {
     const { fullName, shippingAddress, gatewayMethod, totalAmount, totalCurrency } = req.body;
+    const cartItems = req.session.cart || [];
     const orderId = 'MW-' + Date.now().toString().slice(-6).toUpperCase();
-    const itemNames = (req.session.cart || []).map(i => i.name).join(', ');
+    const customerEmail = req.session.user ? req.session.user.email : 'Guest Checkout';
+    const itemNames = cartItems.map(i => i.name).join(', ');
+    const orderDate = new Date().toLocaleDateString();
 
     try {
         await pool.query("INSERT INTO orders (id, customer_email, full_name, shipping_address, gateway_method, items, total, currency, status, date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", 
-            [orderId, req.session.user ? req.session.user.email : 'Guest', fullName, shippingAddress, gatewayMethod, itemNames, totalAmount, totalCurrency, 'Pending Shipment', new Date().toLocaleDateString()]);
+            [orderId, customerEmail, fullName, shippingAddress, gatewayMethod, itemNames, totalAmount, totalCurrency, 'Pending Shipment', orderDate]);
         req.session.cart = [];
         res.send("<script>alert('Order placed successfully!'); window.location = '/';</script>");
     } catch (e) { 
@@ -156,9 +173,10 @@ app.post('/checkout/pay', async (req, res) => {
 app.get('/login', (req, res) => res.render('login', { error: null }));
 
 app.post('/login/customer', async (req, res) => {
+    const { email, password } = req.body;
     try {
-        const found = await pool.query("SELECT * FROM users WHERE email=$1 AND role='customer'", [req.body.email]);
-        if (found.rows.length > 0 && found.rows[0].password === req.body.password) {
+        const found = await pool.query("SELECT * FROM users WHERE email=$1 AND role='customer'", [email]);
+        if (found.rows.length > 0 && found.rows[0].password === password) {
             req.session.user = { email: found.rows[0].email, role: 'customer' };
             return res.redirect('/');
         }
@@ -169,37 +187,8 @@ app.post('/login/customer', async (req, res) => {
 });
 
 app.post('/login/signup', async (req, res) => {
+    const { email, phone, password } = req.body;
     try {
-        const check = await pool.query("SELECT * FROM users WHERE email=$1 OR phone=$2", [req.body.email, req.body.phone]);
-        if (check.rows.length > 0) return res.render('login', { error: 'Email or Phone already mapped.' });
-        await pool.query("INSERT INTO users (email, phone, password, role) VALUES ($1,$2,$3,'customer')", [req.body.email, req.body.phone, req.body.password]);
-        req.session.user = { email: req.body.email, role: 'customer' };
-        res.redirect('/');
-    } catch (e) { 
-        res.status(500).send(e.toString()); 
-    }
-});
+const check = await pool.query("SELECT * FROM users WHERE email=$1 OR phone=$2", [email, phone]);if (check.rows.length > 0) return res.render('login', { error: 'Email or Phone already mapped.' });await pool.query("INSERT INTO users (email, phone, password, role) VALUES ($1,$2,$3,'customer')", [email, phone, password]);req.session.user = { email: email, role: 'customer' };res.redirect('/');} catch (e) {res.status(500).send(e.toString());}});app.post('/login/admin', async (req, res) => {const { email, password } = req.body;try {const found = await pool.query("SELECT * FROM users WHERE email=$1 AND role='admin'", [email]);if (found.rows.length > 0 && found.rows[0].password === password) {req.session.user = { email: found.rows[0].email, role: 'admin' };return res.redirect('/admin');}res.render('login', { error: 'Administrative Access Key Refused.' });} catch (e) {res.status(500).send(e.toString());}});app.get('/logout', (req, res) => {req.session.destroy();res.redirect('/');});const isAdmin = (req, res, next) => {if (req.session.user && req.session.user.role === 'admin') return next();res.status(403).send('Administrative Credentials Required.');};app.get('/admin', isAdmin, async (req, res) => {try {const adminRes = await pool.query("SELECT * FROM users WHERE role='admin' LIMIT 1");const accountsRes = await pool.query("SELECT * FROM users WHERE role='customer' ORDER BY email ASC");const productsRes = await pool.query("SELECT * FROM products ORDER BY id DESC");const ordersRes = await pool.query("SELECT * FROM orders ORDER BY id DESC");const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");const singleAdmin = adminRes.rows.length > 0 ? adminRes.rows[0] : { email: 'admin@mwareshop.com', phone: '', password: '' };const singleContact = contactRes.rows.length > 0 ? contactRes.rows[0] : { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' };res.render('admin', {products: productsRes.rows, contactInfo: singleContact, adminProfile: singleAdmin,orders: ordersRes.rows, accounts: accountsRes.rows});} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/orders/update-status', isAdmin, async (req, res) => {try {await pool.query("UPDATE orders SET status=$1 WHERE id=$2", [req.body.targetStatus, req.body.orderId]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/self/update', isAdmin, async (req, res) => {const { newAdminEmail, newAdminPhone, newAdminPassword } = req.body;try {await pool.query("UPDATE users SET email=$1, phone=$2, password=$3 WHERE role='admin'", [newAdminEmail, newAdminPhone, newAdminPassword]);req.session.user.email = newAdminEmail;res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/accounts/modify', isAdmin, async (req, res) => {try {await pool.query("UPDATE users SET password=$1 WHERE email=$2", [req.body.updatedPassword, req.body.targetEmail]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/add', isAdmin, upload.single('image'), async (req, res) => {const { name, price, currency, status, externalImageUrl } = req.body;let image = 'unsplash.com';if (externalImageUrl && externalImageUrl.trim() !== '') {image = externalImageUrl;} else if (req.file) {image = "/public/uploads/" + req.file.filename;}try {await pool.query("INSERT INTO products (id, name, price, currency, status, image) VALUES ($1,$2,$3,$4,$5,$6)", [Date.now(), name, parseFloat(price), currency, status, image]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/toggle/:id', isAdmin, async (req, res) => {try {const prod = await pool.query("SELECT * FROM products WHERE id=$1", [req.params.id]);if (prod.rows.length > 0) {const nextStatus = prod.rows[0].status === 'In Stock' ? 'Out of Stock' : 'In Stock';await pool.query("UPDATE products SET status=$1 WHERE id=$2", [nextStatus, req.params.id]);}res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/delete/:id', isAdmin, async (req, res) => {try {await pool.query("DELETE FROM products WHERE id=$1", [req.params.id]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/contact/update', isAdmin, async (req, res) => {try {await pool.query("UPDATE contact_info SET phone=$1, email=$2, address=$3 WHERE id=1", [req.body.phone, req.body.email, req.body.address]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});const PORT = process.env.PORT || 3000;app.listen(PORT, () => console.log("Mware Postgres Engine running on port " + PORT));
 
-app.post('/login/admin', async (req, res) => {
-    try {
-        const found = await pool.query("SELECT * FROM users WHERE email=$1 AND role='admin'", [req.body.email]);
-        if (found.rows.length > 0 && found.rows[0].password === req.body.password) {
-            req.session.user = { email: found.rows[0].email, role: 'admin' };
-            return res.redirect('/admin');
-        }
-        res.render('login', { error: 'Access Key Refused.' });
-    } catch (e) { 
-        res.status(500).send(e.toString()); 
-    }
-});
 
-app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
-
-const isAdmin = (req, res, next) => {
-    if (req.session.user && req.session.user.role === 'admin') return next();
-    res.status(403).send('Administrative Access Required.');
-};
-
-app.get('/admin', isAdmin, async (req, res) => {
-    try {
-const adminRes = await pool.query("SELECT * FROM users WHERE role='admin' LIMIT 1");const accountsRes = await pool.query("SELECT * FROM users WHERE role='customer' ORDER BY email ASC");const productsRes = await pool.query("SELECT * FROM products ORDER BY id DESC");const ordersRes = await pool.query("SELECT * FROM orders ORDER BY id DESC");const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");res.render('admin', {products: productsRes.rows, contactInfo: contactRes.rows[0], adminProfile: adminRes.rows[0],orders: ordersRes.rows, accounts: accountsRes.rows});} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/orders/update-status', isAdmin, async (req, res) => {try {await pool.query("UPDATE orders SET status=$1 WHERE id=$2", [req.body.targetStatus, req.body.orderId]);res.redirect('/admin');} catch (e) { res.status(500).send(e.toString()); }});app.post('/admin/self/update', isAdmin, async (req, res) => {try {await pool.query("UPDATE users SET email=$1, phone=$2, password=$3 WHERE role='admin'", [req.body.newAdminEmail, req.body.newAdminPhone, req.body.newAdminPassword]);req.session.user.email = req.body.newAdminEmail;res.redirect('/admin');} catch (e) { res.status(500).send(e.toString()); }});app.post('/admin/accounts/modify', isAdmin, async (req, res) => {try {await pool.query("UPDATE users SET password=$1 WHERE email=$2", [req.body.updatedPassword, req.body.targetEmail]);res.redirect('/admin');} catch (e) { res.status(500).send(e.toString()); }});app.post('/admin/product/add', isAdmin, upload.single('image'), async (req, res) => {const { name, price, currency, status, externalImageUrl } = req.body;let image = 'unsplash.com';if (externalImageUrl && externalImageUrl.trim() !== '') {image = externalImageUrl;} else if (req.file) {image = "/public/uploads/" + req.file.filename;}try {await pool.query("INSERT INTO products (id, name, price, currency, status, image) VALUES ($1,$2,$3,$4,$5,$6)", [Date.now(), name, parseFloat(price), currency, status, image]);res.redirect('/admin');} catch (e) { res.status(500).send(e.toString()); }});app.post('/admin/product/toggle/:id', isAdmin, async (req, res) => {try {const prod = await pool.query("SELECT * FROM products WHERE id=$1", [req.params.id]);if (prod.rows.length > 0) {const nextStatus = prod.rows[0].status === 'In Stock' ? 'Out of Stock' : 'In Stock';await pool.query("UPDATE products SET status=$1 WHERE id=$2", [nextStatus, req.params.id]);}res.redirect('/admin');} catch (e) { res.status(500).send(e.toString()); }});app.post('/admin/product/delete/:id', isAdmin, async (req, res) => {try {await pool.query("DELETE FROM products WHERE id=$1", [req.params.id]);res.redirect('/admin');} catch (e) { res.status(500).send(e.toString()); }});app.post('/admin/contact/update', isAdmin, async (req, res) => {try {await pool.query("UPDATE contact_info SET phone=$1, email=$2, address=$3 WHERE id=1", [req.body.phone, req.body.email, req.body.address]);res.redirect('/admin');} catch (e) { res.status(500).send(e.toString()); }});const PORT = process.env.PORT || 3000;app.listen(PORT, () => console.log("Mware Postgres Engine running on port " + PORT));
