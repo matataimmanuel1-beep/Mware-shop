@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Admin Hub - Mware Shop</title>
+    <meta charset="UTF-8">
+    <title>Admin Hub - Mware Shop</title>
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 25px; }
         .head { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 25px; }
@@ -24,9 +25,10 @@
         <a href="/" style="background:#334155; color:white; padding:8px 12px; border-radius:4px; text-decoration:none; font-size:13px;">View Storefront</a>
     </div>
 
+    <!-- Live Customer Shipment Tracking Module -->
     <div class="panel">
         <h3 style="color:#60a5fa;">Customer Shipment Logistics Tracker</h3>
-        <% if (orders.length === 0) { %>
+        <% if (!orders || orders.length === 0) { %>
             <p style="color:#94a3b8; margin:0;">No customer orders placed yet.</p>
         <% } else { %>
             <table>
@@ -70,9 +72,9 @@
         <div class="panel">
             <h3 style="color:#f43f5e;">My Admin Profile Settings</h3>
             <form action="/admin/self/update" method="POST">
-                <div class="group"><label>Admin Email</label><input type="email" name="newAdminEmail" value="<%= adminProfile[0] ? adminProfile[0].email : '' %>" required></div>
-                <div class="group"><label>Admin Phone</label><input type="text" name="newAdminPhone" value="<%= adminProfile[0] ? adminProfile[0].phone : '' %>" required></div>
-                <div class="group"><label>Admin Password</label><input type="text" name="newAdminPassword" value="<%= adminProfile[0] ? adminProfile[0].password : '' %>" required></div>
+                <div class="group"><label>Admin Email</label><input type="email" name="newAdminEmail" value="<%= (adminProfile && adminProfile.length > 0) ? adminProfile[0].email : '' %>" required></div>
+                <div class="group"><label>Admin Phone</label><input type="text" name="newAdminPhone" value="<%= (adminProfile && adminProfile.length > 0) ? adminProfile[0].phone : '' %>" required></div>
+                <div class="group"><label>Admin Password</label><input type="text" name="newAdminPassword" value="<%= (adminProfile && adminProfile.length > 0) ? adminProfile[0].password : '' %>" required></div>
                 <button type="submit" class="btn" style="background:#e11d48;">Save Admin Profile</button>
             </form>
         </div>
@@ -88,7 +90,7 @@
                             <td style="font-family:monospace; color:#818cf8;"><%= p.price %> <%= p.currency %></td>
                             <td><span style="color: <%= p.status === 'In Stock' ? '#4ade80' : '#f87171' %>;"><%= p.status %></span></td>
                             <td style="text-align:right;">
-                                <form action="/admin/product/toggle/<%= p.id %>" method="POST" style="display:inline;"><button type="submit" class="action">Toggle</button></form>
+                                <form action="/admin/product/toggle/<%= p.id %>" method="POST" style="display:inline;"><button type="submit" class="action">Toggle Status</button></form>
                                 <form action="/admin/product/delete/<%= p.id %>" method="POST" style="display:inline;"><button type="submit" class="action" style="background:#991b1b;">Delete</button></form>
                             </td>
                         </tr>
@@ -105,10 +107,11 @@
                 <div class="group"><label>Product Name</label><input type="text" name="name" required></div>
                 <div class="group" style="display:flex; gap:10px;">
                     <div style="flex:2;"><label>Price</label><input type="number" step="0.01" name="price" required></div>
-                    <div style="width:65px;"><label>Currency</label><input type="text" name="currency" value="USD" required></div>
+                    <div style="width:65px;"><label>Currency</label><input type="text" name="currency" value="Ksh" required></div>
                 </div>
                 <div class="group"><label>Stock Allocation</label><select name="status"><option value="In Stock">In Stock</option><option value="Out of Stock">Out of Stock</option></select></div>
-                <div class="group"><label>Product Image</label><input type="file" name="image" accept="image/*"></div>
+                <div class="group"><label>Option A: Cloud Image Link (Recommended)</label><input type="text" name="externalImageUrl" placeholder="Paste web image address link here"></div>
+                <div class="group"><label>Option B: Upload Local File</label><input type="file" name="image" accept="image/*"></div>
                 <button type="submit" class="btn" style="background:#6366f1;">Deploy Product</button>
             </form>
         </div>
@@ -140,9 +143,60 @@
     <div class="panel">
         <h3>Edit Store Contact Matrix</h3>
         <form action="/admin/contact/update" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">
-            <div class="group"><label>Telephone Route</label><input type="text" name="phone" value="<%= contactInfo[0] ? contactInfo[0].phone : '' %>" required></div>
-            <div class="group"><label>Support Email</label><input type="email" name="email" value="<%= contactInfo[0] ? contactInfo[0].email : '' %>" required></div>
-            <div class="group"><label>HQ Location Address</label><input type="text" name="address" value="<%= contactInfo[0] ? contactInfo[0].address : '' %>" required></div>
-Commit Contacts
+            <div class="group"><label>Telephone Route</label><input type="text" name="phone" value="<%= (contactInfo && contactInfo.length > 0) ? contactInfo[0].phone : '' %>" required></div>
+        <!-- Customer Accounts Matrix -->
+        <div class="panel">
+            <h3>Customer Accounts Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Password</th>
+                        <th>Override</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% accounts.forEach(acc => { %>
+                        <tr>
+                            <td><%= acc.email %></td>
+                            <td><%= acc.phone %></td>
+                            <td style="font-family:monospace; color:#fbbf24;"><%= acc.password %></td>
+                            <td>
+                                <form action="/admin/accounts/modify" method="POST" style="display:flex; gap:4px;">
+                                    <input type="hidden" name="targetEmail" value="<%= acc.email %>">
+                                    <input type="text" name="updatedPassword" placeholder="New" required style="padding:4px; font-size:11px;">
+                                    <button type="submit" class="action" style="background:#d97706;">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
+    <!-- Edit Store Contact Matrix Form Module -->
+    <div class="panel">
+        <h3>Edit Store Contact Matrix</h3>
+        <form action="/admin/contact/update" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">
+            <div class="group">
+                <label>Telephone Route</label>
+                <input type="text" name="phone" value="<%= (contactInfo && contactInfo.length > 0) ? contactInfo[0].phone : '+254 700 000 000' %>" required>
+            </div>
+            <div class="group">
+                <label>Support Email</label>
+                <input type="email" name="email" value="<%= (contactInfo && contactInfo.length > 0) ? contactInfo[0].email : 'support@mwareshop.com' %>" required>
+            </div>
+            <div class="group">
+                <label>HQ Location Address</label>
+                <input type="text" name="address" value="<%= (contactInfo && contactInfo.length > 0) ? contactInfo[0].address : 'Mombasa, Kenya' %>" required>
+            </div>
+            <div style="grid-column: 1 / -1; text-align: right;">
+                <button type="submit" class="btn" style="width:auto; padding:10px 25px; background:#10b981;">Commit Contacts</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
 

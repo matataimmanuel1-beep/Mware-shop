@@ -11,7 +11,7 @@
         .badge { background: <%= theme.accent %>; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; }
         .box { background: <%= theme.cardBg %>; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
         .prod-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; }
         .prod-card img { width: 100%; height: 160px; object-fit: cover; }
         .p-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
@@ -20,7 +20,7 @@
         .status { padding: 2px 6px; font-size: 11px; font-weight: bold; background: rgba(34,197,94,0.2); color: #4ade80; border-radius: 4px; width: max-content; }
         .status.out { background: rgba(239,68,68,0.2); color: #f87171; }
         .btn { width: 100%; padding: 10px; background: <%= theme.btn %>; border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        .qr-img { background: #fff; padding: 6px; border-radius: 6px; width: 120px; height: 120px; margin: 10px auto; display: block; }
+        .qr-img { background: #fff; padding: 6px; border-radius: 6px; width: 130px; height: 130px; margin: 10px auto; display: block; }
         .form-group { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 12px; margin-bottom: 4px; color: #94a3b8; font-weight: bold; }
         input, select, textarea { width: 100%; box-sizing: border-box; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: white; font-family: inherit; }
@@ -140,8 +140,28 @@
                                 <thead>
                                     <tr>
                                         <th>Order ID</th>
-DateItemsTotalStatus<% customerOrders.forEach(ord => { %><%= ord.id %><%= ord.date %><%= ord.items %><%= ord.total %> <%= ord.currency %><%= ord.status %><% }) %><% } %>Change Password Credentials<% if (error) { %><%= error %><% } %><% if (success) { %><%= success %><% } %>Email or Phone AnchorVerification Token (Use 1234)New PasswordApply Changes<% } %>Scan QR Link<% if (qrCode) { %><% } %>Store Support<% if (contactInfo && contactInfo.phone) { %>Ph: <%= contactInfo.phone %>Em: <%= contactInfo.email %>HQ: <%= contactInfo.address %><% } else { %>Ph: +1 234 567 890Em: support@mwareshop.comHQ: 123 Tech Street<% } %>
-
-
-
+                                        <th>Date</th>
+        <aside style="display:flex; flex-direction:column; gap:20px;">
+            <div class="box">
+                <h4 style="margin:0 0 10px 0; font-size:12px; color:#94a3b8; text-transform:uppercase;">Store Support</h4>
+                <div style="font-size:13px; font-family:monospace; line-height:1.6; color:#cbd5e1;">
+                    <% if (contactInfo && contactInfo.length > 0) { %>
+                        <strong>Ph:</strong> <%= contactInfo[0].phone %><br>
+                        <strong>Em:</strong> <%= contactInfo[0].email %><br>
+                        <strong>HQ:</strong> <%= contactInfo[0].address %>
+                    <% } else if (contactInfo && contactInfo.phone) { %>
+                        <strong>Ph:</strong> <%= contactInfo.phone %><br>
+                        <strong>Em:</strong> <%= contactInfo.email %><br>
+                        <strong>HQ:</strong> <%= contactInfo.address %>
+                    <% } else { %>
+                        <strong>Ph:</strong> +254 700 000 000<br>
+                        <strong>Em:</strong> support@mwareshop.com<br>
+                        <strong>HQ:</strong> Mombasa, Kenya
+                    <% } %>
+                </div>
+            </div>
+        </aside>
+    </div>
+</body>
+</html>
 
