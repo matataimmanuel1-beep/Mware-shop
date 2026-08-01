@@ -10,8 +10,8 @@
         .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: bold; }
         .badge { background: <%= theme.accent %>; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; }
-        .box { background: <%= theme.cardBg %>; border: 1px solid #334155; border-radius: 10px; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .box { background: <%= theme.cardBg %>; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
         .prod-card { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; }
         .prod-card img { width: 100%; height: 160px; object-fit: cover; }
         .p-body { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
@@ -22,7 +22,13 @@
         .qr-img { background: #fff; padding: 6px; border-radius: 6px; width: 120px; height: 120px; margin: 10px auto; display: block; }
         .form-group { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 12px; margin-bottom: 4px; color: #94a3b8; }
-        input { width: 100%; box-sizing: border-box; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: white; }
+        input, select, textarea { width: 100%; box-sizing: border-box; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: white; font-family: inherit; }
+        .split-checkout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 768px) { .split-checkout { grid-template-columns: 1fr; } }
+        .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; border-bottom: 1px dashed #334155; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-top: 10px; }
+        th, td { padding: 10px; border-bottom: 1px solid #334155; }
+        th { color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -35,7 +41,7 @@
             <a href="/">Catalog</a>
             <a href="/checkout">Cart <span class="badge"><%= cartCount %></span></a>
             <% if (user) { %>
-                <a href="/profile" style="color:<%= theme.accent %>;">My Profile</a>
+                <a href="/profile" style="color:<%= theme.accent %>;">My Account</a>
                 <a href="/logout" style="background:#334155; padding:4px 10px; border-radius:4px;">Logout</a>
             <% } else { %>
                 <a href="/login" style="background:<%= theme.btn %>; padding:6px 15px; border-radius:4px;">Login</a>
@@ -66,56 +72,70 @@
                     <% }) %>
                 </div>
             <% } else if (activeTab === 'checkout') { %>
-                <h2>Transaction Overview</h2>
-                <div class="box">
-                    <% if (cart.length === 0) { %><p>Your application cart session is empty.</p><% } else { %>
-                        <% cart.forEach(c => { %>
-                            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #334155;">
-                                <span><%= c.name %></span><span class="price"><%= c.price %> <%= c.currency %></span>
+                <h2>Secure Checkout Gateway</h2>
+                <% if (cart.length === 0) { %>
+                    <div class="box"><p style="margin:0; color:#94a3b8;">Your shopping cart is currently empty.</p></div>
+                <% } else { %>
+                    <div class="split-checkout">
+                        <div class="box">
+                            <h3 style="margin:0 0 10px 0; color:white; border-bottom:1px solid #334155; padding-bottom:8px;">Shipping Form</h3>
+                            <form action="/checkout/pay" method="POST">
+                                <input type="hidden" name="totalAmount" value="<%= financials.total %>">
+                                <input type="hidden" name="totalCurrency" value="<%= financials.currency %>">
+                                <div class="form-group">
+                                    <label>Recipient Full Name</label>
+                                    <input type="text" name="fullName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Shipping Address</label>
+                                    <textarea name="shippingAddress" rows="2" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Payment Method</label>
+                                    <select name="gatewayMethod">
+                                        <option value="M-Pesa Express">M-Pesa Mobile Money</option>
+                                        <option value="Credit Card">Visa / Mastercard</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn" style="background:#10b981;">Place Order</button>
+                            </form>
+                        </div>
+
+                        <div class="box" style="display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <h3 style="margin:0 0 10px 0; color:white; border-bottom:1px solid #334155; padding-bottom:8px;">Order Details</h3>
+                                <div style="max-height:120px; overflow-y:auto;">
+                                    <% cart.forEach(c => { %>
+                                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+                                            <span style="color:#cbd5e1;"><%= c.name %></span>
+                                            <span style="font-family:monospace;"><%= c.price %> <%= financials.currency %></span>
+                                        </div>
+                                    <% }) %>
+                                </div>
                             </div>
-                        <% }) %>
-                        <form action="/checkout/pay" method="POST"><button type="submit" class="btn" style="background:#10b981;">Confirm and Settle Balance</button></form>
-                    <% } %>
-                </div>
+                            <div style="border-top:1px solid #334155; padding-top:6px;">
+                                <div class="summary-row"><span>Subtotal:</span><span><%= financials.subtotal %></span></div>
+                                <div class="summary-row"><span>Shipping:</span><span><%= financials.shipping %></span></div>
+                                <div class="summary-row"><span>Tax (16%):</span><span><%= financials.tax %></span></div>
+                                <div class="summary-row" style="border:none; font-size:16px; font-weight:bold; color:white; margin-top:6px;">
+                                    <span>Total Due:</span><span><%= financials.total %> <%= financials.currency %></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
             <% } else if (activeTab === 'profile') { %>
                 <h2>Client Self-Service Dashboard</h2>
-                <div class="box" style="max-width:450px;">
-                    <% if (error) { %><div style="color:#ef4444; margin-bottom:10px;"><%= error %></div><% } %>
-                    <% if (success) { %><div style="color:#22c55e; margin-bottom:10px;"><%= success %></div><% } %>
-                    <p style="font-size:13px; color:#94a3b8;">Welcome back, <strong><%= account.email %></strong>. Enter your email/phone and authentication token to change your credentials.</p>
-                    <form action="/profile/update" method="POST">
-                        <div class="form-group">
-                            <label>Verify Phone Number or Email</label>
-                            
-                        </div>
-                        <div class="form-group">
-                            <label>Token Challenge Code (Hint: Type 1234)</label>
-                            <input type="text" name="verificationCode" required>
-                        </div>
-                        <div class="form-group">
-                            <label>New Secret Password</label>
-                            <input type="password" name="newPassword" required>
-                        </div>
-                        <button type="submit" class="btn">Update System Credentials</button>
-                    </form>
-                </div>
-            <% } %>
-        </div>
+                <div class="box">
+                    <h3>My Orders Tracking Hub</h3>
+                    <% if (customerOrders.length === 0) { %>
+                        <p style="color:#94a3b8; margin:0;">No orders placed yet.</p>
+                    <% } else { %>
+                        <table>
+                            <thead><tr><th>ID</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <% customerOrders.forEach(ord => { %>
+                                    <tr>
+<%= ord.id %><%= ord.date %><%= ord.items %><%= ord.total %> <%= ord.currency %><%= ord.status %><% }) %><% } %>Change Password Credentials<% if (error) { %><%= error %><% } %><% if (success) { %><%= success %><% } %>Email or Phone AnchorVerification Token (Use 1234)New PasswordApply Changes<% } %>Scan QR Link<% if (qrCode) { %><% } %>Store SupportPh: <%= contactInfo[0] ? contactInfo[0].phone : '' %>Em: <%= contactInfo[0] ? contactInfo[0].email : '' %>HQ: <%= contactInfo[0] ? contactInfo[0].address : '' %>
 
-        <aside style="display:flex; flex-direction:column; gap:20px;">
-            <div class="box" style="text-align:center;">
-                <h4 style="margin:0; font-size:12px; color:#94a3b8; text-transform:uppercase;">Sync QR Link</h4>
-                <% if (qrCode) { %><img src="<%= qrCode %>" class="qr-img"><% } %>
-            </div>
-            <div class="box">
-                <h4 style="margin:0 0 10px 0; font-size:12px; color:#94a3b8; text-transform:uppercase;">Support Gateway</h4>
-                <div style="font-size:13px; font-family:monospace; line-height:1.6;">
-                    <strong>Ph:</strong> <%= contactInfo.phone %><br>
-                    <strong>Em:</strong> <%= contactInfo.email %><br>
-                    <strong>Loc:</strong> <%= contactInfo.address %>
-                </div>
-            </div>
-        </aside>
-    </div>
-</body>
-</html>
+
