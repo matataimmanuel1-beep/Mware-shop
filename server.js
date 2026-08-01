@@ -5,7 +5,7 @@ const QRCode = require('qrcode');
 const path = require('path');
 const { Pool } = require('pg');
 
-const app = report = express();
+const app = express();
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -80,7 +80,7 @@ app.get('/', async (req, res) => {
         const prodRes = await pool.query("SELECT * FROM products ORDER BY id DESC");
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");
         
-        // Fix: Extract single row entry dict fallback
+        // Exact Fix: Pull object entry at index 0 from database array
         const singleContact = contactRes.rows.length > 0 ? contactRes.rows[0] : { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' };
         
         res.render('dashboard', { products: prodRes.rows, contactInfo: singleContact, activeTab: 'shop', error: null, success: null });
@@ -114,10 +114,10 @@ app.post('/profile/update', async (req, res) => {
         
         const userCheck = await pool.query("SELECT * FROM users WHERE email=$1 OR phone=$1", [identity]);
         if (userCheck.rows.length === 0) {
-            return res.render('dashboard', { products: [], contactInfo: singleContact, activeTab: 'profile', account: { email: req.session.user.email }, customerOrders: [], error: 'Identifier footprint collision mismatch.', success: null });
+            return res.render('dashboard', { products: [], contactInfo: singleContact, activeTab: 'profile', account: { email: req.session.user.email }, customerOrders: [], error: 'Identifier footprint mismatch.', success: null });
         }
         if (verificationCode !== '1234') {
-            return res.render('dashboard', { products: [], contactInfo: singleContact, activeTab: 'profile', account: userCheck.rows[0], customerOrders: [], error: 'Verification code token challenge failed.', success: null });
+            return res.render('dashboard', { products: [], contactInfo: singleContact, activeTab: 'profile', account: userCheck.rows[0], customerOrders: [], error: 'Verification code invalid.', success: null });
         }
         await pool.query("UPDATE users SET password=$1 WHERE email=$2", [newPassword, userCheck.rows[0].email]);
         res.redirect('/profile');
@@ -190,5 +190,3 @@ app.post('/login/signup', async (req, res) => {
     const { email, phone, password } = req.body;
     try {
 const check = await pool.query("SELECT * FROM users WHERE email=$1 OR phone=$2", [email, phone]);if (check.rows.length > 0) return res.render('login', { error: 'Email or Phone already mapped.' });await pool.query("INSERT INTO users (email, phone, password, role) VALUES ($1,$2,$3,'customer')", [email, phone, password]);req.session.user = { email: email, role: 'customer' };res.redirect('/');} catch (e) {res.status(500).send(e.toString());}});app.post('/login/admin', async (req, res) => {const { email, password } = req.body;try {const found = await pool.query("SELECT * FROM users WHERE email=$1 AND role='admin'", [email]);if (found.rows.length > 0 && found.rows[0].password === password) {req.session.user = { email: found.rows[0].email, role: 'admin' };return res.redirect('/admin');}res.render('login', { error: 'Administrative Access Key Refused.' });} catch (e) {res.status(500).send(e.toString());}});app.get('/logout', (req, res) => {req.session.destroy();res.redirect('/');});const isAdmin = (req, res, next) => {if (req.session.user && req.session.user.role === 'admin') return next();res.status(403).send('Administrative Credentials Required.');};app.get('/admin', isAdmin, async (req, res) => {try {const adminRes = await pool.query("SELECT * FROM users WHERE role='admin' LIMIT 1");const accountsRes = await pool.query("SELECT * FROM users WHERE role='customer' ORDER BY email ASC");const productsRes = await pool.query("SELECT * FROM products ORDER BY id DESC");const ordersRes = await pool.query("SELECT * FROM orders ORDER BY id DESC");const contactRes = await pool.query("SELECT * FROM contact_info WHERE id=1");const singleAdmin = adminRes.rows.length > 0 ? adminRes.rows[0] : { email: 'admin@mwareshop.com', phone: '', password: '' };const singleContact = contactRes.rows.length > 0 ? contactRes.rows[0] : { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' };res.render('admin', {products: productsRes.rows, contactInfo: singleContact, adminProfile: singleAdmin,orders: ordersRes.rows, accounts: accountsRes.rows});} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/orders/update-status', isAdmin, async (req, res) => {try {await pool.query("UPDATE orders SET status=$1 WHERE id=$2", [req.body.targetStatus, req.body.orderId]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/self/update', isAdmin, async (req, res) => {const { newAdminEmail, newAdminPhone, newAdminPassword } = req.body;try {await pool.query("UPDATE users SET email=$1, phone=$2, password=$3 WHERE role='admin'", [newAdminEmail, newAdminPhone, newAdminPassword]);req.session.user.email = newAdminEmail;res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/accounts/modify', isAdmin, async (req, res) => {try {await pool.query("UPDATE users SET password=$1 WHERE email=$2", [req.body.updatedPassword, req.body.targetEmail]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/add', isAdmin, upload.single('image'), async (req, res) => {const { name, price, currency, status, externalImageUrl } = req.body;let image = 'unsplash.com';if (externalImageUrl && externalImageUrl.trim() !== '') {image = externalImageUrl;} else if (req.file) {image = "/public/uploads/" + req.file.filename;}try {await pool.query("INSERT INTO products (id, name, price, currency, status, image) VALUES ($1,$2,$3,$4,$5,$6)", [Date.now(), name, parseFloat(price), currency, status, image]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/toggle/:id', isAdmin, async (req, res) => {try {const prod = await pool.query("SELECT * FROM products WHERE id=$1", [req.params.id]);if (prod.rows.length > 0) {const nextStatus = prod.rows[0].status === 'In Stock' ? 'Out of Stock' : 'In Stock';await pool.query("UPDATE products SET status=$1 WHERE id=$2", [nextStatus, req.params.id]);}res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/product/delete/:id', isAdmin, async (req, res) => {try {await pool.query("DELETE FROM products WHERE id=$1", [req.params.id]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});app.post('/admin/contact/update', isAdmin, async (req, res) => {try {await pool.query("UPDATE contact_info SET phone=$1, email=$2, address=$3 WHERE id=1", [req.body.phone, req.body.email, req.body.address]);res.redirect('/admin');} catch (e) {res.status(500).send(e.toString());}});const PORT = process.env.PORT || 3000;app.listen(PORT, () => console.log("Mware Postgres Engine running on port " + PORT));
-
-
