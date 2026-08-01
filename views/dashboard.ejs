@@ -3,32 +3,34 @@
 <head>
     <meta charset="UTF-8"><title>Mware Shop</title>
     <style>
-        body { background: <%= theme.bg %>; color: <%= theme.text %>; font-family: sans-serif; margin: 0; }
+        body { background: <%= theme.bg %>; color: <%= theme.text %>; font-family: sans-serif; margin: 0; padding-bottom: 50px; }
         nav { background: #020617; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid <%= theme.accent %>; }
         .logo { font-size: 22px; font-weight: 900; color: #fff; text-decoration: none; }
         .nav-links { display: flex; gap: 20px; align-items: center; }
         .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: bold; }
         .badge { background: <%= theme.accent %>; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; }
-        .box { background: <%= theme.cardBg %>; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .prod-card { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; }
+        .box { background: <%= theme.cardBg %>; border: 1px solid #334155; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .prod-card { background: #1e293b; border-radius: 8px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; }
         .prod-card img { width: 100%; height: 160px; object-fit: cover; }
-        .p-body { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .p-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-title { font-size: 16px; font-weight: bold; color: white; margin-bottom: 8px; }
         .price { font-family: monospace; font-size: 18px; color: <%= theme.accent %>; font-weight: bold; margin: 5px 0; }
         .status { padding: 2px 6px; font-size: 11px; font-weight: bold; background: rgba(34,197,94,0.2); color: #4ade80; border-radius: 4px; width: max-content; }
         .status.out { background: rgba(239,68,68,0.2); color: #f87171; }
         .btn { width: 100%; padding: 10px; background: <%= theme.btn %>; border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; }
         .qr-img { background: #fff; padding: 6px; border-radius: 6px; width: 120px; height: 120px; margin: 10px auto; display: block; }
         .form-group { margin-bottom: 12px; text-align: left; }
-        label { display: block; font-size: 12px; margin-bottom: 4px; color: #94a3b8; }
+        label { display: block; font-size: 12px; margin-bottom: 4px; color: #94a3b8; font-weight: bold; }
         input, select, textarea { width: 100%; box-sizing: border-box; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: white; font-family: inherit; }
         .split-checkout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media(max-width: 768px) { .split-checkout { grid-template-columns: 1fr; } }
+        @media(max-width: 768px) { .split-checkout { grid-template-columns: 1fr; } .container { grid-template-columns: 1fr; } }
         .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; border-bottom: 1px dashed #334155; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-top: 10px; }
-        th, td { padding: 10px; border-bottom: 1px solid #334155; }
-        th { color: #94a3b8; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; margin-top: 15px; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid #334155; }
+        th { color: #94a3b8; font-weight: bold; background: #0f172a; }
+        h2, h3 { margin-top: 0; color: #fff; }
     </style>
 </head>
 <body>
@@ -41,6 +43,7 @@
             <a href="/">Catalog</a>
             <a href="/checkout">Cart <span class="badge"><%= cartCount %></span></a>
             <% if (user) { %>
+                <% if (user.role === 'admin') { %><a href="/admin" style="color:#fbbf24;">Admin Panel</a><% } %>
                 <a href="/profile" style="color:<%= theme.accent %>;">My Account</a>
                 <a href="/logout" style="background:#334155; padding:4px 10px; border-radius:4px;">Logout</a>
             <% } else { %>
@@ -59,7 +62,7 @@
                             <img src="<%= p.image %>" alt="<%= p.name %>">
                             <div class="p-body">
                                 <div>
-                                    <div style="font-weight:bold; color:white;"><%= p.name %></div>
+                                    <div class="card-title"><%= p.name %></div>
                                     <div class="price"><%= p.price %> <%= p.currency %></div>
                                     <div class="status <%= p.status !== 'In Stock' ? 'out' : '' %>"><%= p.status %></div>
                                 </div>
@@ -78,7 +81,7 @@
                 <% } else { %>
                     <div class="split-checkout">
                         <div class="box">
-                            <h3 style="margin:0 0 10px 0; color:white; border-bottom:1px solid #334155; padding-bottom:8px;">Shipping Form</h3>
+                            <h3>Shipping Form</h3>
                             <form action="/checkout/pay" method="POST">
                                 <input type="hidden" name="totalAmount" value="<%= financials.total %>">
                                 <input type="hidden" name="totalCurrency" value="<%= financials.currency %>">
@@ -103,7 +106,7 @@
 
                         <div class="box" style="display:flex; flex-direction:column; justify-content:space-between;">
                             <div>
-                                <h3 style="margin:0 0 10px 0; color:white; border-bottom:1px solid #334155; padding-bottom:8px;">Order Details</h3>
+                                <h3>Order Details</h3>
                                 <div style="max-height:120px; overflow-y:auto;">
                                     <% cart.forEach(c => { %>
                                         <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
@@ -126,16 +129,19 @@
                 <% } %>
             <% } else if (activeTab === 'profile') { %>
                 <h2>Client Self-Service Dashboard</h2>
+                
                 <div class="box">
                     <h3>My Orders Tracking Hub</h3>
-                    <% if (customerOrders.length === 0) { %>
+                    <% if (!customerOrders || customerOrders.length === 0) { %>
                         <p style="color:#94a3b8; margin:0;">No orders placed yet.</p>
                     <% } else { %>
-                        <table>
-                            <thead><tr><th>ID</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
-                            <tbody>
-                                <% customerOrders.forEach(ord => { %>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead>
                                     <tr>
-<%= ord.id %><%= ord.date %><%= ord.items %><%= ord.total %> <%= ord.currency %><%= ord.status %><% }) %><% } %>Change Password Credentials<% if (error) { %><%= error %><% } %><% if (success) { %><%= success %><% } %>Email or Phone AnchorVerification Token (Use 1234)New PasswordApply Changes<% } %>Scan QR Link<% if (qrCode) { %><% } %>Store SupportPh: <%= contactInfo[0] ? contactInfo[0].phone : '' %>Em: <%= contactInfo[0] ? contactInfo[0].email : '' %>HQ: <%= contactInfo[0] ? contactInfo[0].address : '' %>
+                                        <th>Order ID</th>
+DateItemsTotalStatus<% customerOrders.forEach(ord => { %><%= ord.id %><%= ord.date %><%= ord.items %><%= ord.total %> <%= ord.currency %><%= ord.status %><% }) %><% } %>Change Password Credentials<% if (error) { %><%= error %><% } %><% if (success) { %><%= success %><% } %>Email or Phone AnchorVerification Token (Use 1234)New PasswordApply Changes<% } %>Scan QR Link<% if (qrCode) { %><% } %>Store Support<% if (contactInfo && contactInfo.phone) { %>Ph: <%= contactInfo.phone %>Em: <%= contactInfo.email %>HQ: <%= contactInfo.address %><% } else { %>Ph: +1 234 567 890Em: support@mwareshop.comHQ: 123 Tech Street<% } %>
+
+
 
 
