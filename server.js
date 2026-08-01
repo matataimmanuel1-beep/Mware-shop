@@ -3,6 +3,8 @@ const session = require('express-session');
 const multer = require('multer');
 const QRCode = require('qrcode');
 const path = require('path');
+const fs = require('fs');
+const { execSync } = require('child_process');
 const { Pool } = require('pg');
 
 const app = express();
@@ -34,27 +36,54 @@ app.use(session({
     cookie: { secure: false }
 }));
 
+// ====================== DATABASE & RESTORE RAILWAY DATA ======================
 async function initDatabase() {
     try {
         await pool.query("CREATE TABLE IF NOT EXISTS contact_info (id INT PRIMARY KEY, phone TEXT, email TEXT, address TEXT);");
         await pool.query("CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, phone TEXT, password TEXT, role TEXT);");
         await pool.query("CREATE TABLE IF NOT EXISTS products (id BIGINT PRIMARY KEY, name TEXT, price NUMERIC, currency TEXT, status TEXT, image TEXT);");
         await pool.query("CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, customer_email TEXT, full_name TEXT, shipping_address TEXT, gateway_method TEXT, items TEXT, total TEXT, currency TEXT, status TEXT, date TEXT);");
-        
-        await pool.query("INSERT INTO contact_info (id, phone, email, address) VALUES (1, '+254 700 000 000', 'support@mwareshop.com', 'Mombasa, Kenya') ON CONFLICT DO NOTHING;");
-        await pool.query("INSERT INTO users (email, phone, password, role) VALUES ('admin@mwareshop.com', '123456789', 'adminpassword', 'admin') ON CONFLICT DO NOTHING;");
-        await pool.query("INSERT INTO products (id, name, price, currency, status, image) VALUES (1, 'Mware Edition Watch', 129.99, 'USD', 'In Stock', 'https://unsplash.com') ON CONFLICT DO NOTHING;");
-        console.log("PostgreSQL Database Schema Connected Perfectly.");
-    } catch (err) { 
-        console.error("Database Setup Failure: ", err); 
+
+        // Create default admin if it doesn't exist (only on fresh installs)
+        const adminExists = await pool.query("SELECT 1 FROM users WHERE role='admin' LIMIT 1");
+        if (adminExists.rows.length === 0) {
+            await pool.query("INSERT INTO users (email, phone, password, role) VALUES ('admin@mwareshop.com', '123456789', 'adminpassword', 'admin')");
+            console.log("✅ Default admin user created.");
+        }
+
+        console.log("✅ PostgreSQL Schema Ready – Railway data preserved.");
+    } catch (err) {
+        console.error("❌ Database Setup Error:", err);
     }
 }
 
 initDatabase();
 
+// Restore your Railway data on every startup (uses the backup you exported earlier)
+function restoreRailwayBackup() {
+    const backupPath = path.join(__dirname, 'mware-shop-backup/railway_backup.dump');
+    try {
+        if (fs.existsSync(backupPath)) {
+            console.log("🔄 Restoring your Railway backup...");
+            execSync(`pg_restore -U postgres -h localhost -p 5432 -d mware-shop ${backupPath}`, { stdio: 'inherit' });
+            console.log("✅ Railway data restored successfully!");
+        } else {
+            console.log("No backup found yet (you can restore later).");
+        }
+    } catch (err) {
+        console.log("No backup or restore failed (normal on first run).");
+    }
+}
+
+// Run restore after DB setup
+setTimeout(() => {
+    restoreRailwayBackup();
+}, 1000);
+
+// ====================== HOLIDAY THEME ======================
 function getHolidayTheme() {
     const now = new Date();
-    const month = now.getMonth() + 1; 
+    const month = now.getMonth() + 1;
     const day = now.getDate();
     if (month === 12) return { name: 'Christmas Spectacular', bg: '#14532d', cardBg: '#052e16', text: '#f8fafc', accent: '#ef4444', btn: '#dc2626' };
     if (month === 10 && day >= 15) return { name: 'Spooky Halloween', bg: '#1c1917', cardBg: '#292524', text: '#ffedd5', accent: '#f97316', btn: '#ea580c' };
@@ -203,14 +232,11 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-// ====================== ADMIN MIDDLEWARE ======================
-const isAdmin = (req, res, next) => {
-    if (req.session.user && req.session.user.role === 'admin') return next();
-    res.status(403).send('Administrative Credentials Required.');
-};
-
 // ====================== ADMIN ROUTES ======================
-app.get('/admin', isAdmin, async (req, res) => {
+app.get('/admin', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     try {
         const adminRes = await pool.query("SELECT * FROM users WHERE role='admin' LIMIT 1");
         const accountsRes = await pool.query("SELECT * FROM users WHERE role='customer' ORDER BY email ASC");
@@ -225,7 +251,10 @@ app.get('/admin', isAdmin, async (req, res) => {
     }
 });
 
-app.post('/admin/orders/update-status', isAdmin, async (req, res) => {
+app.post('/admin/orders/update-status', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     try {
         await pool.query("UPDATE orders SET status=$1 WHERE id=$2", [req.body.targetStatus, req.body.orderId]);
         res.redirect('/admin');
@@ -234,7 +263,10 @@ app.post('/admin/orders/update-status', isAdmin, async (req, res) => {
     }
 });
 
-app.post('/admin/self/update', isAdmin, async (req, res) => {
+app.post('/admin/self/update', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     const { newAdminEmail, newAdminPhone, newAdminPassword } = req.body;
     try {
         await pool.query("UPDATE users SET email=$1, phone=$2, password=$3 WHERE role='admin'", [newAdminEmail, newAdminPhone, newAdminPassword]);
@@ -245,7 +277,10 @@ app.post('/admin/self/update', isAdmin, async (req, res) => {
     }
 });
 
-app.post('/admin/accounts/modify', isAdmin, async (req, res) => {
+app.post('/admin/accounts/modify', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     try {
         await pool.query("UPDATE users SET password=$1 WHERE email=$2", [req.body.updatedPassword, req.body.targetEmail]);
         res.redirect('/admin');
@@ -254,7 +289,10 @@ app.post('/admin/accounts/modify', isAdmin, async (req, res) => {
     }
 });
 
-app.post('/admin/product/add', isAdmin, upload.single('image'), async (req, res) => {
+app.post('/admin/product/add', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     const { name, price, currency, status, externalImageUrl } = req.body;
     let image = 'unsplash.com';
     if (externalImageUrl && externalImageUrl.trim() !== '') {
@@ -271,7 +309,10 @@ app.post('/admin/product/add', isAdmin, upload.single('image'), async (req, res)
     }
 });
 
-app.post('/admin/product/toggle/:id', isAdmin, async (req, res) => {
+app.post('/admin/product/toggle/:id', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     try {
         const prod = await pool.query("SELECT * FROM products WHERE id=$1", [req.params.id]);
         if (prod.rows.length > 0) {
@@ -284,7 +325,10 @@ app.post('/admin/product/toggle/:id', isAdmin, async (req, res) => {
     }
 });
 
-app.post('/admin/product/delete/:id', isAdmin, async (req, res) => {
+app.post('/admin/product/delete/:id', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     try {
         await pool.query("DELETE FROM products WHERE id=$1", [req.params.id]);
         res.redirect('/admin');
@@ -293,7 +337,10 @@ app.post('/admin/product/delete/:id', isAdmin, async (req, res) => {
     }
 });
 
-app.post('/admin/contact/update', isAdmin, async (req, res) => {
+app.post('/admin/contact/update', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Administrative Credentials Required.');
+    }
     try {
         await pool.query("UPDATE contact_info SET phone=$1, email=$2, address=$3 WHERE id=1", 
             [req.body.phone, req.body.email, req.body.address]);
@@ -304,4 +351,4 @@ app.post('/admin/contact/update', isAdmin, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Mware Postgres Engine running on port " + PORT));
+app.listen(PORT, () => console.log("🚀 Mware Shop running on port " + PORT));
