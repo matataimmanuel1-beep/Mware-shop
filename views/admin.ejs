@@ -1,5 +1,3 @@
-Admin.ejs : 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +16,7 @@ Admin.ejs :
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
         th { padding: 8px; color: #94a3b8; border-bottom: 1px solid #334155; text-transform: uppercase; font-size: 11px; }
         td { padding: 10px 8px; border-bottom: 1px solid #334155; vertical-align: middle; }
-        .action { background: #334155; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .action { background: #334155; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -27,7 +25,7 @@ Admin.ejs :
         <a href="/" style="background:#334155; color:white; padding:8px 12px; border-radius:4px; text-decoration:none; font-size:13px;">View Storefront</a>
     </div>
 
-    <!-- Orders -->
+    <!-- Live Customer Shipment Tracking Module -->
     <div class="panel">
         <h3 style="color:#60a5fa;">Customer Shipment Logistics Tracker</h3>
         <% if (!orders || orders.length === 0) { %>
@@ -49,9 +47,15 @@ Admin.ejs :
                     <% orders.forEach(ord => { %>
                         <tr>
                             <td style="font-family:monospace; color:#fff; font-weight:bold;"><%= ord.id %></td>
-                            <td><%= ord.full_name %><br><span style="font-size:10px; color:#94a3b8;"><%= ord.customer_email %></span></td>
+                            <td>
+                                <%= ord.full_name %><br>
+                                <span style="font-size:10px; color:#94a3b8;"><%= ord.customer_email %></span>
+                            </td>
                             <td><%= ord.items %></td>
-                            <td style="font-size:11px; max-width:150px;"><%= ord.shipping_address %><br><span style="color:#818cf8;"><%= ord.gateway_method %></span></td>
+                            <td style="font-size:11px; max-width:150px;">
+                                <%= ord.shipping_address %><br>
+                                <span style="color:#818cf8;"><%= ord.gateway_method %></span>
+                            </td>
                             <td style="font-family:monospace; color:#fbbf24;"><%= ord.total %> <%= ord.currency %></td>
                             <td>
                                 <span style="padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px;
@@ -79,7 +83,7 @@ Admin.ejs :
     </div>
 
     <div class="grid">
-        <!-- Admin Profile -->
+        <!-- Admin Profile Settings -->
         <div class="panel">
             <h3 style="color:#f43f5e;">My Admin Profile Settings</h3>
             <form action="/admin/self/update" method="POST">
@@ -99,19 +103,28 @@ Admin.ejs :
             </form>
         </div>
 
-        <!-- Catalog -->
+        <!-- Live Catalog Controls -->
         <div class="panel">
             <h3>Live Catalog Controls</h3>
             <table>
                 <thead>
-                    <tr><th>Item Name</th><th>Price</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <% products.forEach(p => { %>
                         <tr>
                             <td><strong><%= p.name %></strong></td>
                             <td style="font-family:monospace; color:#818cf8;"><%= p.price %> <%= p.currency %></td>
-                            <td><span style="color: <%= p.status === 'In Stock' ? '#4ade80' : '#f87171' %>;"><%= p.status %></span></td>
+                            <td>
+                                <span style="color: <%= p.status === 'In Stock' ? '#4ade80' : '#f87171' %>;">
+                                    <%= p.status %>
+                                </span>
+                            </td>
                             <td style="text-align:right;">
                                 <form action="/admin/product/toggle/<%= p.id %>" method="POST" style="display:inline;">
                                     <button type="submit" class="action">Toggle Status</button>
@@ -128,14 +141,23 @@ Admin.ejs :
     </div>
 
     <div class="grid">
-        <!-- Add Product -->
+        <!-- Add New Product -->
         <div class="panel">
             <h3>Add New Product</h3>
             <form action="/admin/product/add" method="POST" enctype="multipart/form-data">
-                <div class="group"><label>Product Name</label><input type="text" name="name" required></div>
+                <div class="group">
+                    <label>Product Name</label>
+                    <input type="text" name="name" required>
+                </div>
                 <div class="group" style="display:flex; gap:10px;">
-                    <div style="flex:2;"><label>Price</label><input type="number" step="0.01" name="price" required></div>
-                    <div style="width:65px;"><label>Currency</label><input type="text" name="currency" value="Ksh" required></div>
+                    <div style="flex:2;">
+                        <label>Price</label>
+                        <input type="number" step="0.01" name="price" required>
+                    </div>
+                    <div style="width:65px;">
+                        <label>Currency</label>
+                        <input type="text" name="currency" value="Ksh" required>
+                    </div>
                 </div>
                 <div class="group">
                     <label>Stock Allocation</label>
@@ -144,18 +166,30 @@ Admin.ejs :
                         <option value="Out of Stock">Out of Stock</option>
                     </select>
                 </div>
-                <div class="group"><label>Option A: Cloud Image Link</label><input type="text" name="externalImageUrl" placeholder="https://..."></div>
-                <div class="group"><label>Option B: Upload Local File</label><input type="file" name="image" accept="image/*"></div>
+                <div class="group">
+                    <label>Option A: Cloud Image Link (Recommended)</label>
+                    <input type="text" name="externalImageUrl" placeholder="Paste web image address link here">
+                </div>
+                <div class="group">
+                    <label>Option B: Upload Local File</label>
+                    <input type="file" name="image" accept="image/*">
+                </div>
                 <button type="submit" class="btn" style="background:#6366f1;">Deploy Product</button>
             </form>
         </div>
 
-        <!-- Customer Accounts -->
+        <!-- Customer Accounts Matrix -->
         <div class="panel">
             <h3>Customer Accounts Matrix</h3>
             <table>
                 <thead>
-                    <tr><th>Email</th><th>Phone</th><th>Password</th><th>Override</th></tr>
+                    <tr>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Password</th>
+                        <th>Reset Code</th>
+                        <th>Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
                     <% accounts.forEach(acc => { %>
@@ -163,11 +197,21 @@ Admin.ejs :
                             <td><%= acc.email %></td>
                             <td><%= acc.phone %></td>
                             <td style="font-family:monospace; color:#fbbf24;"><%= acc.password %></td>
+                            <td style="font-family:monospace; color:#60a5fa; font-weight:bold;">
+                                <%= acc.reset_code ? acc.reset_code : '—' %>
+                            </td>
                             <td>
+                                <!-- Generate Reset Code -->
+                                <form action="/admin/accounts/generate-reset-code" method="POST" style="display:inline;">
+                                    <input type="hidden" name="targetEmail" value="<%= acc.email %>">
+                                    <button type="submit" class="action" style="background:#0ea5e9; margin-bottom:5px;">Generate Code</button>
+                                </form>
+
+                                <!-- Change Password -->
                                 <form action="/admin/accounts/modify" method="POST" style="display:flex; gap:4px;">
                                     <input type="hidden" name="targetEmail" value="<%= acc.email %>">
-                                    <input type="text" name="updatedPassword" placeholder="New" required style="padding:4px; font-size:11px;">
-                                    <button type="submit" class="action" style="background:#d97706;">Save</button>
+                                    <input type="text" name="updatedPassword" placeholder="New pass" required style="padding:4px; font-size:11px; width:90px;">
+                                    <button type="submit" class="action" style="background:#d97706;">Set Pass</button>
                                 </form>
                             </td>
                         </tr>
@@ -177,7 +221,7 @@ Admin.ejs :
         </div>
     </div>
 
-    <!-- Contact -->
+    <!-- Edit Store Contact Matrix -->
     <div class="panel">
         <h3>Edit Store Contact Matrix</h3>
         <form action="/admin/contact/update" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">
