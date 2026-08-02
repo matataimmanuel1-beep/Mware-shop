@@ -42,7 +42,7 @@
                 <% } %>
                 <a href="/logout" style="color: #f87171;"><i class="fa fa-sign-out-alt"></i> Out</a>
             <% } else { %>
-                <a href="/login"><i class="fa fa-sign-in-alt"></i> Access Gateway</a>
+                <a href="/login"><i class="fa fa-sign-in-alt"></i> LOGIN</a>
             <% } %>
         </nav>
     </header>
@@ -51,8 +51,8 @@
         <div class="theme-selector-box">
             <span><strong>Select Storefront Theme Layout Profile Canvas:</strong></span>
             <button onclick="applyThemeProfile('default')" class="action-button" style="width:auto; margin:0; background:#059669;">Standard Default</button>
-            <button onclick="applyThemeProfile('christmas')" class="action-button" style="width:auto; margin:0; background:#f3f4f6; color:#1f2937;">Light Mode</button>
-            <button onclick="applyThemeProfile('diwali')" class="action-button" style="width:auto; margin:0; background:#1f2937; color:#f9fafb;">Dark Mode</button>
+            <button onclick="applyThemeProfile('light')" class="action-button" style="width:auto; margin:0; background:#f3f4f6; color:#1f2937;">Light Mode</button>
+            <button onclick="applyThemeProfile('dark')" class="action-button" style="width:auto; margin:0; background:#1f2937; color:#f9fafb;">Dark Mode</button>
         </div>
 
         <% if (activeTab === 'home') { %>
@@ -71,7 +71,7 @@
                                 <button class="action-button" 
                                         onclick="executeDirectCheckout('<%= product.price %>')"
                                         <%= product.status !== 'In Stock' ? 'disabled' : '' %>>
-                                    <%= product.status === 'In Stock' ? 'Instant Purchase Settlement' : 'Stock Exhausted' %>
+                                    <%= product.status === 'In Stock' ? 'Instant Purchase Settlement' : 'out of stock' %>
                                 </button>
                             </div>
                         </div>
@@ -79,7 +79,7 @@
                 <% }) %>
             </div>
         <% } else if (activeTab === 'orders') { %>
-            <h3>Personal Account Historical Ledger Purchases</h3>
+            <h3>ORDERS</h3>
             <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>

@@ -120,9 +120,9 @@
                                     <form action="/orders/update-status" method="POST">
                                         <input type="hidden" name="orderId" value="<%= order.id %>">
                                         <select name="status" onchange="this.form.submit()">
-                                            <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending Pipeline</option>
+                                            <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending </option>
                                             <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped In Transit</option>
-                                            <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered Complete</option>
+                                            <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivery Complete</option>
                                         </select>
                                     </form>
                                 </td>
