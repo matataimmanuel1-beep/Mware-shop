@@ -1,18 +1,17 @@
 {
-  "name": "railway-shopping-site",
+  "name": "mware-shop",
   "version": "1.0.0",
-  "description": "Corrected production build for node shopping application structure",
+  "description": "Mware Shop Full Stack E-Commerce",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "multer": "^1.4.5-lts.1",
-    "pg": "^8.11.5",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "ejs": "^3.1.10",
+    "pg": "^8.11.5"
   }
 }
-

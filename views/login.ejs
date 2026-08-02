@@ -2,132 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Login</title>
-    <link href="https://cloudflare.com" rel="stylesheet">
+    <title>Login - Mware Shop</title>
     <style>
-        :root {
-            --bg-dark: #0f172a;
-            --surface-white: #ffffff;
-            --primary-blue: #2563eb;
-            --admin-purple: #7c3aed;
-            --success-green: #059669;
-            --text-slate: #475569;
-        }
-        body { font-family: system-ui, sans-serif; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .login-card { background: var(--surface-white); padding: 40px; border-radius: 16px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.4); }
-        .form-title { margin: 0 0 10px 0; text-align: center; color: #1e293b; font-size: 26px; font-weight: 800; }
-        .subtitle { text-align: center; color: var(--text-slate); margin-bottom: 25px; font-size: 14px; }
-        
-        /* Segmented Selector Controls */
-        .access-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; margin-bottom: 25px; }
-        .tab-trigger { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 6px; font-weight: 600; font-size: 13px; color: var(--text-slate); cursor: pointer; transition: all 0.2s; }
-        .tab-trigger.active { background: var(--surface-white); color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        
-        .form-container { display: none; }
-        .form-container.active { display: block; }
-        
-        .input-group { margin-bottom: 16px; position: relative; }
-        .input-group i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .input-element { width: 100%; padding: 12px 12px 12px 40px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; transition: border 0.2s; }
-        .input-element:focus { border-color: var(--primary-blue); outline: none; }
-        
-        .submit-trigger { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; color: white; margin-top: 10px; transition: background 0.2s; }
-        .btn-client { background: var(--primary-blue); }
-        .btn-client:hover { background: #1d4ed8; }
-        .btn-register { background: var(--success-green); }
-        .btn-register:hover { background: #047857; }
-        .btn-admin { background: var(--admin-purple); }
-        .btn-admin:hover { background: #6d28d9; }
-        
-        .alert { padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 14px; font-weight: 500; }
-        .alert-error { background: #fee2e2; color: #b91c1c; }
-        .alert-success { background: #d1fae5; color: #065f46; }
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 40px 20px; }
+        .container { max-width: 420px; margin: 40px auto; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        h1 { text-align: center; color: #fbbf24; margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        label { display: block; font-size: 13px; margin-bottom: 5px; color: #94a3b8; font-weight: bold; }
+        input { width: 100%; box-sizing: border-box; padding: 12px; background: #334155; border: 1px solid #475569; border-radius: 6px; color: white; font-family: inherit; }
+        .btn { width: 100%; padding: 14px; background: #4f46e5; border: none; color: white; font-weight: bold; font-size: 16px; border-radius: 8px; cursor: pointer; }
+        .btn:hover { background: #6366f1; }
+        .alert { background: rgba(234,179,8,0.2); color: #fbbf24; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
+        a { color: #60a5fa; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h2 class="form-title">MWARE SHOP</h2>
-        <p class="subtitle">Select your entry point type clear options below</p>
-        
-        <% if (error) { %>
-            <div class="alert alert-error"><i class="fa fa-exclamation-circle"></i> <%= error %></div>
-        <% } %>
-        <% if (success) { %>
-            <div class="alert alert-success"><i class="fa fa-check-circle"></i> <%= success %></div>
+    <div class="container">
+        <h1>🔑 Login</h1>
+
+        <% if (message) { %>
+            <div class="alert"><%= message %></div>
         <% } %>
 
-        <!-- Access Segment Tabs -->
-        <div class="access-tabs">
-            <button class="tab-trigger active" onclick="switchView('client-login')"><i class="fa fa-user"></i> Client Login</button>
-            <button class="tab-trigger" onclick="switchView('client-register')"><i class="fa fa-user-plus"></i> Register</button>
-            <button class="tab-trigger" onclick="switchView('admin-login')"><i class="fa fa-user-shield"></i> Admin Access</button>
-        </div>
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">Sign In</button>
+        </form>
 
-        <!-- OPTION A: CLIENT / CUSTOMER LOGIN -->
-        <div id="client-login" class="form-container active">
-            <form action="/login" method="POST">
-                <div class="input-group">
-                    <i class="fa fa-envelope"></i>
-                    <input type="email" name="email" class="input-element" placeholder="Client Email Address" required>
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-lock"></i>
-                    <input type="password" name="password" class="input-element" placeholder="Password String" required>
-                </div>
-                <button type="submit" class="submit-trigger btn-client">Sign In to Dashboard</button>
-            </form>
-        </div>
-
-        <!-- OPTION B: CUSTOMER SELF-REGISTRATION SYSTEM -->
-        <div id="client-register" class="form-container">
-            <form action="/register" method="POST">
-                <div class="input-group">
-                    <i class="fa fa-id-badge"></i>
-                    <input type="text" name="username" class="input-element" placeholder="Desired Username" required>
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-envelope"></i>
-                    <input type="email" name="email" class="input-element" placeholder="Valid Email Address" required>
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-lock"></i>
-                    <input type="password" name="password" class="input-element" placeholder="Choose a Secure Password" required>
-                </div>
-                <button type="submit" class="submit-trigger btn-register">Create Client Account</button>
-            </form>
-        </div>
-
-        <!-- OPTION C: ADMINISTRATIVE GATEWAY INTERFACE -->
-        <div id="admin-login" class="form-container">
-            <form action="/login" method="POST">
-                <div class="input-group">
-                    <i class="fa fa-envelope-shield"></i>
-                    <input type="email" name="email" class="input-element" placeholder="Admin Terminal Email" required>
-                </div>
-                <div class="input-group">
-                    <i class="fa fa-key"></i>
-                    <input type="password" name="password" class="input-element" placeholder="Admin Security Key" required>
-                </div>
-                <button type="submit" class="submit-trigger btn-admin">Access Secure Matrix</button>
-            </form>
+        <div style="text-align: center; margin-top: 20px; font-size: 13px; color: #94a3b8;">
+            <a href="/">← Back to Shop</a>
         </div>
     </div>
-
-    <script>
-        function switchView(targetFormId) {
-            // Remove active tags everywhere
-            document.querySelectorAll('.form-container').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-trigger').forEach(el => el.classList.remove('active'));
-            
-            // Assign active tag dynamically to chosen variant mapping
-            document.getElementById(targetFormId).classList.add('active');
-            
-            // Highlight targeted active selection button control element
-            const currentButtonIndex = targetFormId === 'client-login' ? 0 : (targetFormId === 'client-register' ? 1 : 2);
-            document.querySelectorAll('.tab-trigger')[currentButtonIndex].classList.add('active');
-        }
-    </script>
 </body>
 </html>
-
