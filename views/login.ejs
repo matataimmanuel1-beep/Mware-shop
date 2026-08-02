@@ -9,12 +9,12 @@
         h1 { text-align: center; color: #fbbf24; margin-bottom: 20px; }
         .form-group { margin-bottom: 18px; text-align: left; }
         label { display: block; font-size: 13px; margin-bottom: 5px; color: #94a3b8; font-weight: bold; }
-        input { width: 100%; box-sizing: border-box; padding: 12px; background: #334155; border: 1px solid #475569; border-radius: 6px; color: white; font-family: inherit; }
+        input, select { width: 100%; box-sizing: border-box; padding: 12px; background: #334155; border: 1px solid #475569; border-radius: 6px; color: white; font-family: inherit; }
         .btn { width: 100%; padding: 14px; background: #4f46e5; border: none; color: white; font-weight: bold; font-size: 16px; border-radius: 8px; cursor: pointer; }
         .btn:hover { background: #6366f1; }
         .alert { background: rgba(234,179,8,0.2); color: #fbbf24; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
         a { color: #60a5fa; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        .links { text-align: center; margin-top: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -37,8 +37,9 @@
             <button type="submit" class="btn">Sign In</button>
         </form>
 
-        <div style="text-align: center; margin-top: 20px; font-size: 13px; color: #94a3b8;">
-            <a href="/">← Back to Shop</a>
+        <div class="links">
+            <p>Don't have an account? <a href="/register">Register as Customer</a></p>
+            <p><a href="/">← Back to Shop</a></p>
         </div>
     </div>
 </body>
