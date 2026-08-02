@@ -337,6 +337,34 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// ====================== REGISTER (Customer) ======================
+app.get('/register', (req, res) => {
+    res.render('register', { message: null });
+});
+
+app.post('/register', async (req, res) => {
+    const { email, phone, password } = req.body;
+
+    try {
+        const exists = await pool.query("SELECT 1 FROM users WHERE email = $1", [email]);
+        if (exists.rows.length > 0) {
+            return res.render('register', { message: 'Email already registered.' });
+        }
+
+        await pool.query(
+            "INSERT INTO users (email, phone, password, role) VALUES ($1, $2, $3, 'customer')",
+            [email, phone, password]
+        );
+
+        // Auto-login after successful registration
+        req.session.user = { email, role: 'customer' };
+        res.redirect('/');
+    } catch (e) {
+        console.error(e);
+        res.render('register', { message: 'Registration failed. Please try again.' });
+    }
+});
+
 // ====================== LOGOUT ======================
 app.get('/logout', (req, res) => {
     req.session.destroy(() => {
@@ -358,8 +386,8 @@ app.get('/admin', async (req, res) => {
 
         res.render('admin', {
             products: productsRes.rows,
-            contactInfo: contactRes.rows,          // array as template expects
-            adminProfile: adminRes.rows,           // array as template expects
+            contactInfo: contactRes.rows,
+            adminProfile: adminRes.rows,
             orders: ordersRes.rows,
             accounts: accountsRes.rows
         });
