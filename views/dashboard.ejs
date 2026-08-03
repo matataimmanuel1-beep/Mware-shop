@@ -14,72 +14,15 @@
         .container { max-width: 1200px; margin: 20px auto; padding: 0 12px; display: grid; grid-template-columns: 3fr 1fr; gap: 25px; }
         .box { background: <%= theme.cardBg %>; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
 
-        /* 7 products per row on phone */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-        }
-        .prod-card {
-            background: #1e293b;
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-        }
-        .prod-card img {
-            width: 100%;
-            height: 65px;
-            object-fit: cover;
-        }
-        .p-body {
-            padding: 5px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .card-title {
-            font-size: 10px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 2px;
-            line-height: 1.2;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .price {
-            font-family: monospace;
-            font-size: 11px;
-            color: <%= theme.accent %>;
-            font-weight: bold;
-        }
-        .status {
-            padding: 1px 4px;
-            font-size: 8px;
-            font-weight: bold;
-            background: rgba(34,197,94,0.2);
-            color: #4ade80;
-            border-radius: 3px;
-            width: max-content;
-            margin-top: 2px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .prod-card { background: #1e293b; border-radius: 6px; overflow: hidden; border: 1px solid #334155; display: flex; flex-direction: column; }
+        .prod-card img { width: 100%; height: 65px; object-fit: cover; }
+        .p-body { padding: 5px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-title { font-size: 10px; font-weight: bold; color: white; margin-bottom: 2px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .price { font-family: monospace; font-size: 11px; color: <%= theme.accent %>; font-weight: bold; }
+        .status { padding: 1px 4px; font-size: 8px; font-weight: bold; background: rgba(34,197,94,0.2); color: #4ade80; border-radius: 3px; width: max-content; margin-top: 2px; }
         .status.out { background: rgba(239,68,68,0.2); color: #f87171; }
-        .btn {
-            width: 100%;
-            padding: 4px;
-            background: <%= theme.btn %>;
-            border: none;
-            color: white;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 4px;
-            font-size: 9px;
-        }
+        .btn { width: 100%; padding: 4px; background: <%= theme.btn %>; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 4px; font-size: 9px; }
 
         @media (min-width: 600px) {
             .grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
@@ -104,9 +47,12 @@
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th, td { padding: 10px 8px; border-bottom: 1px solid #334155; }
         th { color: #94a3b8; background: #0f172a; }
-        .notif { background: #1e293b; border-left: 4px solid <%= theme.accent %>; padding: 10px 14px; margin-bottom: 8px; border-radius: 0 6px 6px 0; font-size: 13px; }
+        .notif { background: #1e293b; border-left: 4px solid <%= theme.accent %>; padding: 10px 14px; margin-bottom: 8px; border-radius: 0 6px 6px 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .qr-box { text-align: center; }
         .qr-box img { background: white; padding: 8px; border-radius: 8px; }
+        .action { background: #334155; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 2px solid <%= theme.accent %>; }
+        .till-box { background: #0f172a; padding: 14px; border-radius: 8px; margin-bottom: 14px; text-align: center; border: 1px solid #334155; }
 
         @media(max-width: 768px) {
             .container { grid-template-columns: 1fr; }
@@ -145,7 +91,7 @@
 
                 <div class="category-bar">
                     <a href="/" class="cat-btn <%= !selectedCategory ? 'active' : '' %>">All</a>
-                    <% if (typeof categories !== 'undefined') { %>
+                    <% if (typeof categories !== 'undefined' && categories) { %>
                         <% categories.forEach(c => { %>
                             <a href="/?category=<%= encodeURIComponent(c.category) %>" class="cat-btn <%= selectedCategory === c.category ? 'active' : '' %>">
                                 <%= c.category %>
@@ -192,10 +138,15 @@
                                 <div class="form-group"><label>Shipping Address</label><textarea name="shippingAddress" rows="2" required></textarea></div>
                                 <div class="form-group">
                                     <label>Payment Method</label>
-                                    <select name="gatewayMethod">
-                                        <option value="M-Pesa Express">M-Pesa</option>
+                                    <select name="gatewayMethod" id="payMethod" onchange="showTill()">
+                                        <option value="M-Pesa Till">M-Pesa Till</option>
+                                        <option value="Cash">Cash on Delivery</option>
                                         <option value="Credit Card">Visa / Mastercard</option>
                                     </select>
+                                </div>
+                                <div id="tillBox" class="till-box">
+                                    <p style="margin:0; font-size:13px; color:#94a3b8;">Pay to M-Pesa Till Number</p>
+                                    <p style="margin:8px 0 0; font-size:24px; font-weight:bold; color:#22c55e; letter-spacing:3px;">9507049</p>
                                 </div>
                                 <button type="submit" class="btn" style="background:#10b981; padding:12px; font-size:14px;">Place Order</button>
                             </form>
@@ -210,12 +161,11 @@
                             <% }) %>
                             <div style="border-top:1px solid #334155; margin-top:12px; padding-top:8px;">
                                 <div class="summary-row"><span>Subtotal</span><span><%= financials.subtotal %></span></div>
-                                <div class="summary-row"><span>Tax (16%)</span><span><%= financials.tax %></span></div>
                                 <div class="summary-row" style="border:none; font-weight:bold; font-size:16px;">
                                     <span>Total</span><span><%= financials.total %> <%= financials.currency %></span>
                                 </div>
                                 <p style="font-size:12px; color:#94a3b8; margin-top:10px;">
-                                    * Final total (including transport) will be confirmed by Admin
+                                    * Admin will confirm final total (including transport if any)
                                 </p>
                             </div>
                         </div>
@@ -225,20 +175,63 @@
             <% } else if (activeTab === 'profile') { %>
                 <h2>My Account</h2>
 
+                <!-- Store Owner Details -->
                 <div class="box">
-                    <h3>Notifications</h3>
+                    <h3>Store Owner Details</h3>
+                    <p style="margin:6px 0;"><strong>Phone:</strong> <%= contactInfo.phone %></p>
+                    <p style="margin:6px 0;"><strong>Email:</strong> <%= contactInfo.email %></p>
+                    <p style="margin:6px 0;"><strong>Address:</strong> <%= contactInfo.address %></p>
+                </div>
+
+                <!-- Profile -->
+                <div class="box">
+                    <h3>My Profile</h3>
+                    <% if (account && account.profile_image) { %>
+                        <img src="<%= account.profile_image %>" class="profile-img" alt="Profile">
+                    <% } %>
+                    <form action="/profile/update-full" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone" value="<%= account && account.phone ? account.phone : '' %>">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password (leave blank to keep current)</label>
+                            <input type="password" name="newPassword" placeholder="Type new password">
+                        </div>
+                        <div class="form-group">
+                            <label>Profile Photo</label>
+                            <input type="file" name="profileImage" accept="image/*">
+                        </div>
+                        <button type="submit" class="btn" style="background:#10b981; padding:10px; font-size:13px;">Save Profile</button>
+                    </form>
+                </div>
+
+                <!-- Notifications -->
+                <div class="box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3 style="margin:0;">Notifications</h3>
+                        <form action="/notifications/clear" method="POST">
+                            <button type="submit" class="btn" style="width:auto; padding:6px 12px; font-size:12px; background:#991b1b;">Clear All</button>
+                        </form>
+                    </div>
                     <% if (!notifications || notifications.length === 0) { %>
-                        <p style="color:#94a3b8;">No notifications yet.</p>
+                        <p style="color:#94a3b8;">No notifications.</p>
                     <% } else { %>
                         <% notifications.forEach(n => { %>
                             <div class="notif">
-                                <%= n.message %><br>
-                                <small style="color:#64748b;"><%= new Date(n.created_at).toLocaleString() %></small>
+                                <div>
+                                    <%= n.message %><br>
+                                    <small style="color:#64748b;"><%= new Date(n.created_at).toLocaleString() %></small>
+                                </div>
+                                <form action="/notifications/delete/<%= n.id %>" method="POST">
+                                    <button type="submit" class="action" style="background:#991b1b;">Delete</button>
+                                </form>
                             </div>
                         <% }) %>
                     <% } %>
                 </div>
 
+                <!-- Orders -->
                 <div class="box">
                     <h3>My Orders</h3>
                     <% if (!customerOrders || customerOrders.length === 0) { %>
@@ -253,6 +246,7 @@
                                         <th>Items</th>
                                         <th>Total</th>
                                         <th>Status</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -269,6 +263,14 @@
                                                     <%= ord.status %>
                                                 </span>
                                             </td>
+                                            <td>
+                                                <% if (ord.status === 'Shipped') { %>
+                                                    <form action="/orders/confirm-delivery" method="POST">
+                                                        <input type="hidden" name="orderId" value="<%= ord.id %>">
+                                                        <button type="submit" class="btn" style="width:auto; padding:5px 10px; font-size:11px; background:#10b981;">Confirm Delivery</button>
+                                                    </form>
+                                                <% } else { %>—<% } %>
+                                            </td>
                                         </tr>
                                     <% }) %>
                                 </tbody>
@@ -279,6 +281,7 @@
             <% } %>
         </div>
 
+        <!-- Sidebar -->
         <div>
             <div class="box">
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#94a3b8; text-transform:uppercase;">Store Support</h4>
@@ -304,5 +307,22 @@
             <% } %>
         </div>
     </div>
+
+    <script>
+        function showTill() {
+            const val = document.getElementById('payMethod');
+            const box = document.getElementById('tillBox');
+            if (val && box) {
+                box.style.display = val.value === 'M-Pesa Till' ? 'block' : 'none';
+            }
+        }
+        // Popup latest notification once
+        <% if (activeTab === 'profile' && typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
+        if (!sessionStorage.getItem('notif_shown')) {
+            alert("Notification: <%= notifications[0].message.replace(/"/g, '\\"').replace(/'/g, "\\'") %>");
+            sessionStorage.setItem('notif_shown', '1');
+        }
+        <% } %>
+    </script>
 </body>
 </html>
