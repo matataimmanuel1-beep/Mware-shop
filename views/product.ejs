@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.name %> - Mware Shop</title>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .back { color: #60a5fa; text-decoration: none; font-size: 14px; }
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; }
+        .product-img { width: 100%; border-radius: 12px; border: 1px solid #334155; }
+        .price { font-size: 28px; font-family: monospace; color: #6366f1; font-weight: bold; margin: 15px 0; }
+        .btn { padding: 14px 28px; background: #4f46e5; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+        .in { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .out { background: rgba(239,68,68,0.2); color: #f87171; }
+        @media(max-width: 768px) { .product-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back">← Back to Catalog</a>
+
+        <div class="product-grid">
+            <div>
+                <img src="<%= product.image %>" alt="<%= product.name %>" class="product-img" onerror="this.src='https://via.placeholder.com/500'">
+            </div>
+            <div>
+                <h1 style="margin-top:0;"><%= product.name %></h1>
+                <div class="price"><%= product.price %> <%= product.currency %></div>
+                <p><strong>Category:</strong> <%= product.category || 'General' %></p>
+                <p>
+                    <span class="status <%= product.status === 'In Stock' ? 'in' : 'out' %>">
+                        <%= product.status %>
+                    </span>
+                </p>
+                <div style="margin: 25px 0; line-height: 1.6; color: #cbd5e1;">
+                    <%= product.description || 'No detailed description available.' %>
+                </div>
+
+                <% if (product.status === 'In Stock') { %>
+                    <form action="/cart/add" method="POST">
+                        <input type="hidden" name="productId" value="<%= product.id %>">
+                        <button type="submit" class="btn">Add to Cart</button>
+                    </form>
+                <% } else { %>
+                    <button class="btn" style="background:#64748b; cursor:not-allowed;" disabled>Out of Stock</button>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

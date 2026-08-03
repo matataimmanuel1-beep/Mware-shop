@@ -2,90 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Hub - Mware Shop</title>
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 25px; }
-        .head { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 25px; }
+        .head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; margin-bottom: 25px; }
         .panel { background: #1e293b; border: 1px solid #334155; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
         h3 { margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 8px; color: #fbbf24; }
         .group { margin-bottom: 10px; }
         label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 3px; }
-        input, select, textarea { width: 100%; box-sizing: border-box; padding: 8px; background: #334155; border: 1px solid #475569; border-radius: 4px; color: white; }
+        input, select, textarea { width: 100%; box-sizing: border-box; padding: 8px; background: #334155; border: 1px solid #475569; border-radius: 4px; color: white; font-size: 13px; }
         .btn { width: 100%; padding: 10px; background: #4f46e5; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
         th { padding: 8px; color: #94a3b8; border-bottom: 1px solid #334155; text-transform: uppercase; font-size: 11px; }
         td { padding: 10px 8px; border-bottom: 1px solid #334155; vertical-align: middle; }
         .action { background: #334155; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .notif { background: #0f172a; border-left: 4px solid #6366f1; padding: 10px 12px; margin-bottom: 8px; border-radius: 0 6px 6px 0; font-size: 13px; }
+        .qr-box { text-align: center; }
+        .qr-box img { background: white; padding: 8px; border-radius: 8px; }
+        @media(max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="head">
-        <h2>MWARE SHOP ADMINISTRATOR CONTROL PANEL</h2>
-        <a href="/" style="background:#334155; color:white; padding:8px 12px; border-radius:4px; text-decoration:none; font-size:13px;">View Storefront</a>
+        <h2 style="margin:0;">MWARE SHOP – ADMIN CONTROL PANEL</h2>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a href="/switch-view" style="background:#059669; color:white; padding:8px 14px; border-radius:4px; text-decoration:none; font-size:13px;">Switch to Customer View</a>
+            <a href="/" style="background:#334155; color:white; padding:8px 14px; border-radius:4px; text-decoration:none; font-size:13px;">View Storefront</a>
+            <a href="/logout" style="background:#991b1b; color:white; padding:8px 14px; border-radius:4px; text-decoration:none; font-size:13px;">Logout</a>
+        </div>
     </div>
 
-    <!-- Live Customer Shipment Tracking Module -->
+    <!-- Notifications -->
+    <div class="panel">
+        <h3 style="color:#a78bfa;">Admin Notifications</h3>
+        <% if (!notifications || notifications.length === 0) { %>
+            <p style="color:#94a3b8; margin:0;">No notifications yet.</p>
+        <% } else { %>
+            <% notifications.forEach(n => { %>
+                <div class="notif">
+                    <%= n.message %><br>
+                    <small style="color:#64748b;"><%= new Date(n.created_at).toLocaleString() %></small>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <!-- Orders Tracker -->
     <div class="panel">
         <h3 style="color:#60a5fa;">Customer Shipment Logistics Tracker</h3>
         <% if (!orders || orders.length === 0) { %>
             <p style="color:#94a3b8; margin:0;">No customer orders placed yet.</p>
         <% } else { %>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Client Details</th>
-                        <th>Items</th>
-                        <th>Destination Address</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th style="text-align:right;">Logistics Update</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% orders.forEach(ord => { %>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
                         <tr>
-                            <td style="font-family:monospace; color:#fff; font-weight:bold;"><%= ord.id %></td>
-                            <td>
-                                <%= ord.full_name %><br>
-                                <span style="font-size:10px; color:#94a3b8;"><%= ord.customer_email %></span>
-                            </td>
-                            <td><%= ord.items %></td>
-                            <td style="font-size:11px; max-width:150px;">
-                                <%= ord.shipping_address %><br>
-                                <span style="color:#818cf8;"><%= ord.gateway_method %></span>
-                            </td>
-                            <td style="font-family:monospace; color:#fbbf24;"><%= ord.total %> <%= ord.currency %></td>
-                            <td>
-                                <span style="padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px;
-                                    background: <%= ord.status==='Delivered' ? 'rgba(34,197,94,0.15)' : ord.status==='Shipped' ? 'rgba(59,130,246,0.15)' : 'rgba(234,179,8,0.15)' %>;
-                                    color: <%= ord.status==='Delivered' ? '#4ade80' : ord.status==='Shipped' ? '#60a5fa' : '#facc15' %>;">
-                                    <%= ord.status %>
-                                </span>
-                            </td>
-                            <td style="text-align:right;">
-                                <form action="/admin/orders/update-status" method="POST" style="display:inline-flex; gap:4px;">
-                                    <input type="hidden" name="orderId" value="<%= ord.id %>">
-                                    <select name="targetStatus" style="padding:2px; font-size:11px; width:auto;">
-                                        <option value="Pending">Pending</option>
-                                        <option value="Shipped">Shipped</option>
-                                        <option value="Delivered">Delivered</option>
-                                    </select>
-                                    <button type="submit" class="action" style="background:#2563eb;">Set</button>
-                                </form>
-                            </td>
+                            <th>Order ID</th>
+                            <th>Client Details</th>
+                            <th>Items</th>
+                            <th>Destination</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Update</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% orders.forEach(ord => { %>
+                            <tr>
+                                <td style="font-family:monospace; font-weight:bold;"><%= ord.id %></td>
+                                <td>
+                                    <%= ord.full_name %><br>
+                                    <span style="font-size:10px; color:#94a3b8;"><%= ord.customer_email %></span>
+                                </td>
+                                <td><%= ord.items %></td>
+                                <td style="font-size:11px; max-width:140px;">
+                                    <%= ord.shipping_address %><br>
+                                    <span style="color:#818cf8;"><%= ord.gateway_method %></span>
+                                </td>
+                                <td style="font-family:monospace; color:#fbbf24;"><%= ord.total %> <%= ord.currency %></td>
+                                <td>
+                                    <span style="padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px;
+                                        background: <%= ord.status==='Delivered' ? 'rgba(34,197,94,0.15)' : ord.status==='Shipped' ? 'rgba(59,130,246,0.15)' : 'rgba(234,179,8,0.15)' %>;
+                                        color: <%= ord.status==='Delivered' ? '#4ade80' : ord.status==='Shipped' ? '#60a5fa' : '#facc15' %>;">
+                                        <%= ord.status %>
+                                    </span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <form action="/admin/orders/update-status" method="POST" style="display:inline-flex; gap:4px;">
+                                        <input type="hidden" name="orderId" value="<%= ord.id %>">
+                                        <select name="targetStatus" style="padding:2px; font-size:11px; width:auto;">
+                                            <option value="Pending">Pending</option>
+                                            <option value="Shipped">Shipped</option>
+                                            <option value="Delivered">Delivered</option>
+                                        </select>
+                                        <button type="submit" class="action" style="background:#2563eb;">Set</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
         <% } %>
     </div>
 
     <div class="grid">
-        <!-- Admin Profile Settings -->
+        <!-- Admin Profile -->
         <div class="panel">
-            <h3 style="color:#f43f5e;">My Admin Profile Settings</h3>
+            <h3 style="color:#f43f5e;">My Admin Profile</h3>
             <form action="/admin/self/update" method="POST">
                 <div class="group">
                     <label>Admin Email</label>
@@ -101,42 +129,59 @@
                 </div>
                 <button type="submit" class="btn" style="background:#e11d48;">Save Admin Profile</button>
             </form>
+
+            <!-- QR + Site Link -->
+            <div class="qr-box" style="margin-top:25px;">
+                <h4 style="color:#94a3b8; font-size:12px; text-transform:uppercase;">Site QR & Link</h4>
+                <% if (typeof qrCode !== 'undefined' && qrCode) { %>
+                    <img src="<%= qrCode %>" alt="QR Code" width="130">
+                <% } %>
+                <p style="font-size:12px; word-break:break-all; margin-top:8px;">
+                    <a href="<%= typeof siteUrl !== 'undefined' ? siteUrl : '/' %>" style="color:#60a5fa;">
+                        <%= typeof siteUrl !== 'undefined' ? siteUrl : 'Loading...' %>
+                    </a>
+                </p>
+            </div>
         </div>
 
-        <!-- Live Catalog Controls -->
+        <!-- Catalog Controls -->
         <div class="panel">
             <h3>Live Catalog Controls</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item Name</th>
-                        <th>Price</th>
-                        <th>Status</th>
-                        <th style="text-align:right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% products.forEach(p => { %>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
                         <tr>
-                            <td><strong><%= p.name %></strong></td>
-                            <td style="font-family:monospace; color:#818cf8;"><%= p.price %> <%= p.currency %></td>
-                            <td>
-                                <span style="color: <%= p.status === 'In Stock' ? '#4ade80' : '#f87171' %>;">
-                                    <%= p.status %>
-                                </span>
-                            </td>
-                            <td style="text-align:right;">
-                                <form action="/admin/product/toggle/<%= p.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="action">Toggle Status</button>
-                                </form>
-                                <form action="/admin/product/delete/<%= p.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="action" style="background:#991b1b;">Delete</button>
-                                </form>
-                            </td>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% products.forEach(p => { %>
+                            <tr>
+                                <td><strong><%= p.name %></strong></td>
+                                <td style="color:#94a3b8;"><%= p.category || 'General' %></td>
+                                <td style="font-family:monospace; color:#818cf8;"><%= p.price %> <%= p.currency %></td>
+                                <td>
+                                    <span style="color: <%= p.status === 'In Stock' ? '#4ade80' : '#f87171' %>;">
+                                        <%= p.status %>
+                                    </span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <form action="/admin/product/toggle/<%= p.id %>" method="POST" style="display:inline;">
+                                        <button type="submit" class="action">Toggle</button>
+                                    </form>
+                                    <form action="/admin/product/delete/<%= p.id %>" method="POST" style="display:inline;">
+                                        <button type="submit" class="action" style="background:#991b1b;">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -154,79 +199,86 @@
                         <label>Price</label>
                         <input type="number" step="0.01" name="price" required>
                     </div>
-                    <div style="width:65px;">
+                    <div style="width:70px;">
                         <label>Currency</label>
                         <input type="text" name="currency" value="Ksh" required>
                     </div>
                 </div>
                 <div class="group">
-                    <label>Stock Allocation</label>
+                    <label>Category</label>
+                    <input type="text" name="category" placeholder="e.g. Electronics, Clothing, Food" value="General">
+                </div>
+                <div class="group">
+                    <label>Description</label>
+                    <textarea name="description" rows="3" placeholder="Product details..."></textarea>
+                </div>
+                <div class="group">
+                    <label>Stock Status</label>
                     <select name="status">
                         <option value="In Stock">In Stock</option>
                         <option value="Out of Stock">Out of Stock</option>
                     </select>
                 </div>
                 <div class="group">
-                    <label>Option A: Cloud Image Link (Recommended)</label>
-                    <input type="text" name="externalImageUrl" placeholder="Paste web image address link here">
+                    <label>Image URL (recommended)</label>
+                    <input type="text" name="externalImageUrl" placeholder="https://...">
                 </div>
                 <div class="group">
-                    <label>Option B: Upload Local File</label>
+                    <label>Or Upload Image</label>
                     <input type="file" name="image" accept="image/*">
                 </div>
                 <button type="submit" class="btn" style="background:#6366f1;">Deploy Product</button>
             </form>
         </div>
 
-        <!-- Customer Accounts Matrix -->
+        <!-- Customer Accounts -->
         <div class="panel">
             <h3>Customer Accounts Matrix</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Password</th>
-                        <th>Reset Code</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% accounts.forEach(acc => { %>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
                         <tr>
-                            <td><%= acc.email %></td>
-                            <td><%= acc.phone %></td>
-                            <td style="font-family:monospace; color:#fbbf24;"><%= acc.password %></td>
-                            <td style="font-family:monospace; color:#60a5fa; font-weight:bold;">
-                                <%= acc.reset_code ? acc.reset_code : '—' %>
-                            </td>
-                            <td>
-                                <!-- Generate Reset Code -->
-                                <form action="/admin/accounts/generate-reset-code" method="POST" style="display:inline;">
-                                    <input type="hidden" name="targetEmail" value="<%= acc.email %>">
-                                    <button type="submit" class="action" style="background:#0ea5e9; margin-bottom:5px;">Generate Code</button>
-                                </form>
-
-                                <!-- Change Password -->
-                                <form action="/admin/accounts/modify" method="POST" style="display:flex; gap:4px;">
-                                    <input type="hidden" name="targetEmail" value="<%= acc.email %>">
-                                    <input type="text" name="updatedPassword" placeholder="New pass" required style="padding:4px; font-size:11px; width:90px;">
-                                    <button type="submit" class="action" style="background:#d97706;">Set Pass</button>
-                                </form>
-                            </td>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Password</th>
+                            <th>Reset Code</th>
+                            <th>Actions</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% accounts.forEach(acc => { %>
+                            <tr>
+                                <td><%= acc.email %></td>
+                                <td><%= acc.phone %></td>
+                                <td style="font-family:monospace; color:#fbbf24;"><%= acc.password %></td>
+                                <td style="font-family:monospace; color:#60a5fa; font-weight:bold;">
+                                    <%= acc.reset_code ? acc.reset_code : '—' %>
+                                </td>
+                                <td>
+                                    <form action="/admin/accounts/generate-reset-code" method="POST" style="display:inline;">
+                                        <input type="hidden" name="targetEmail" value="<%= acc.email %>">
+                                        <button type="submit" class="action" style="background:#0ea5e9; margin-bottom:4px;">Generate Code</button>
+                                    </form>
+                                    <form action="/admin/accounts/modify" method="POST" style="display:flex; gap:4px;">
+                                        <input type="hidden" name="targetEmail" value="<%= acc.email %>">
+                                        <input type="text" name="updatedPassword" placeholder="New pass" required style="padding:4px; font-size:11px; width:85px;">
+                                        <button type="submit" class="action" style="background:#d97706;">Set</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Edit Store Contact Matrix -->
+    <!-- Contact Info -->
     <div class="panel">
         <h3>Edit Store Contact Matrix</h3>
         <form action="/admin/contact/update" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">
             <div class="group">
-                <label>Telephone Route</label>
+                <label>Telephone</label>
                 <input type="text" name="phone" value="<%= (contactInfo && contactInfo.length > 0) ? contactInfo[0].phone : '+254 700 000 000' %>" required>
             </div>
             <div class="group">
@@ -234,7 +286,7 @@
                 <input type="email" name="email" value="<%= (contactInfo && contactInfo.length > 0) ? contactInfo[0].email : 'support@mwareshop.com' %>" required>
             </div>
             <div class="group">
-                <label>HQ Location Address</label>
+                <label>HQ Address</label>
                 <input type="text" name="address" value="<%= (contactInfo && contactInfo.length > 0) ? contactInfo[0].address : 'Mombasa, Kenya' %>" required>
             </div>
             <div style="grid-column: 1 / -1; text-align: right;">

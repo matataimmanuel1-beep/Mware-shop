@@ -5,43 +5,55 @@
     <title>Login - Mware Shop</title>
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 40px 20px; }
-        .container { max-width: 420px; margin: 40px auto; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        .container { max-width: 420px; margin: 40px auto; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; }
         h1 { text-align: center; color: #fbbf24; margin-bottom: 20px; }
-        .form-group { margin-bottom: 18px; text-align: left; }
+        .form-group { margin-bottom: 18px; position: relative; }
         label { display: block; font-size: 13px; margin-bottom: 5px; color: #94a3b8; font-weight: bold; }
-        input { width: 100%; box-sizing: border-box; padding: 12px; background: #334155; border: 1px solid #475569; border-radius: 6px; color: white; font-family: inherit; }
+        input { width: 100%; box-sizing: border-box; padding: 12px; background: #334155; border: 1px solid #475569; border-radius: 6px; color: white; }
+        .toggle-pw { position: absolute; right: 12px; top: 38px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 13px; }
         .btn { width: 100%; padding: 14px; background: #4f46e5; border: none; color: white; font-weight: bold; font-size: 16px; border-radius: 8px; cursor: pointer; }
-        .btn:hover { background: #6366f1; }
         .alert { background: rgba(234,179,8,0.2); color: #fbbf24; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; }
-        a { color: #60a5fa; text-decoration: none; }
         .links { text-align: center; margin-top: 22px; font-size: 14px; line-height: 1.8; }
+        a { color: #60a5fa; text-decoration: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔑 Login</h1>
-
-        <% if (message) { %>
-            <div class="alert"><%= message %></div>
-        <% } %>
+        <% if (message) { %><div class="alert"><%= message %></div><% } %>
 
         <form action="/login" method="POST">
             <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" name="email" placeholder="you@example.com" required>
+                <input type="email" name="email" required>
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" required>
+                <input type="password" name="password" id="password" required>
+                <button type="button" class="toggle-pw" onclick="togglePassword()">Show</button>
             </div>
             <button type="submit" class="btn">Sign In</button>
         </form>
 
         <div class="links">
-            <p>Don't have an account? <a href="/register">Register as Customer</a></p>
-            <p><a href="/forgot-password">Forgot your password?</a></p>
+            <p>Don't have an account? <a href="/register">Register</a></p>
+            <p><a href="/forgot-password">Forgot password?</a></p>
             <p><a href="/">← Back to Shop</a></p>
         </div>
     </div>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const btn = document.querySelector('.toggle-pw');
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+    </script>
 </body>
 </html>
