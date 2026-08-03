@@ -403,13 +403,40 @@ app.get('/admin', async (req, res) => {
 });
 
 app.post('/admin/orders/update-status', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
-    await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [req.body.targetStatus, req.body.orderId]);
-    const order = await pool.query("SELECT customer_email FROM orders WHERE id = $1", [req.body.orderId]);
-    if (order.rows[0] && order.rows[0].customer_email !== 'Guest Checkout') {
-        await createNotification(order.rows[0].customer_email, `Order ${req.body.orderId} is now: ${req.body.targetStatus}`);
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send('Forbidden');
     }
-    res.redirect('/admin');
+
+    const orderId = req.body.orderId;
+    const targetStatus = req.body.targetStatus;
+
+    if (!orderId || !targetStatus) {
+        return res.status(400).send('Missing order ID or status');
+    }
+
+    try {
+        await pool.query(
+            "UPDATE orders SET status = $1 WHERE id = $2",
+            [targetStatus, orderId]
+        );
+
+        const order = await pool.query(
+            "SELECT customer_email FROM orders WHERE id = $1",
+            [orderId]
+        );
+
+        if (order.rows[0] && order.rows[0].customer_email !== 'Guest Checkout') {
+            await createNotification(
+                order.rows[0].customer_email,
+                `Order ${orderId} is now: ${targetStatus}`
+            );
+        }
+
+        res.redirect('/admin');
+    } catch (e) {
+        console.error('Status update error:', e);
+        res.status(500).send(e.toString());
+    }
 });
 
 app.post('/admin/orders/set-total', async (req, res) => {

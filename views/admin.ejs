@@ -103,12 +103,12 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <form action="/admin/orders/update-status" method="POST" style="display:flex; gap:4px;">
+                                    <form action="/admin/orders/update-status" method="POST" style="display:flex; gap:4px; align-items:center;">
                                         <input type="hidden" name="orderId" value="<%= ord.id %>">
-                                        <select name="targetStatus" style="padding:2px; font-size:11px;">
-                                            <option value="Pending">Pending</option>
-                                            <option value="Shipped">Shipped</option>
-                                            <option value="Delivered">Delivered</option>
+                                        <select name="targetStatus" required style="padding:4px; font-size:11px; background:#334155; color:white; border:1px solid #475569; border-radius:4px;">
+                                            <option value="Pending" <%= ord.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                            <option value="Shipped" <%= ord.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                            <option value="Delivered" <%= ord.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                         </select>
                                         <button type="submit" class="action" style="background:#2563eb;">Set</button>
                                     </form>
