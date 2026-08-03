@@ -352,12 +352,7 @@ app.post('/forgot-password', async (req, res) => {
                 return res.render('forgot-password', { message: 'No account found.', success: false, generatedCode: null });
             }
             await pool.query("UPDATE users SET reset_code = $1 WHERE email = $2", [code, email]);
-            return res.render('forgot-password', {
-                message: 'Verification code generated.',
-                success: true,
-                generatedCode: code,
-                email
-            });
+            return res.render('forgot-password', { message: 'Verification code generated.', success: true, generatedCode: code, email });
         }
         const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
         if (user.rows.length === 0) {
@@ -392,7 +387,7 @@ app.get('/admin', async (req, res) => {
             pool.query("SELECT * FROM products ORDER BY id DESC"),
             pool.query("SELECT * FROM orders ORDER BY id DESC"),
             pool.query("SELECT * FROM contact_info WHERE id = 1"),
-            pool.query("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 25")
+            pool.query("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 30")
         ]);
         res.render('admin', {
             products: productsRes.rows,
@@ -428,6 +423,18 @@ app.post('/admin/orders/set-total', async (req, res) => {
     if (order.customer_email && order.customer_email !== 'Guest Checkout') {
         await createNotification(order.customer_email, `Admin set order ${req.body.orderId} total to ${total.toFixed(2)} ${order.currency}`);
     }
+    res.redirect('/admin');
+});
+
+app.post('/admin/notifications/clear', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
+    await pool.query("DELETE FROM notifications");
+    res.redirect('/admin');
+});
+
+app.post('/admin/notifications/delete/:id', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
+    await pool.query("DELETE FROM notifications WHERE id = $1", [req.params.id]);
     res.redirect('/admin');
 });
 

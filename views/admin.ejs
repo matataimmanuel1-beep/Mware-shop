@@ -18,7 +18,7 @@
         th { padding: 8px; color: #94a3b8; border-bottom: 1px solid #334155; text-transform: uppercase; font-size: 11px; text-align: left; }
         td { padding: 9px 8px; border-bottom: 1px solid #334155; vertical-align: middle; }
         .action { background: #334155; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .notif { background: #0f172a; border-left: 4px solid #6366f1; padding: 10px 12px; margin-bottom: 8px; border-radius: 0 6px 6px 0; font-size: 13px; }
+        .notif { background: #0f172a; border-left: 4px solid #6366f1; padding: 10px 12px; margin-bottom: 8px; border-radius: 0 6px 6px 0; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .qr-box { text-align: center; margin-top: 20px; }
         .qr-box img { background: white; padding: 8px; border-radius: 8px; }
         @media(max-width: 900px) { .grid { grid-template-columns: 1fr; } }
@@ -36,14 +36,24 @@
 
     <!-- Notifications -->
     <div class="panel">
-        <h3 style="color:#a78bfa;">Notifications</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="color:#a78bfa; margin:0; border:none; padding:0;">Notifications</h3>
+            <form action="/admin/notifications/clear" method="POST">
+                <button type="submit" class="action" style="background:#991b1b;">Clear All</button>
+            </form>
+        </div>
         <% if (!notifications || notifications.length === 0) { %>
             <p style="color:#94a3b8; margin:0;">No notifications.</p>
         <% } else { %>
             <% notifications.forEach(n => { %>
                 <div class="notif">
-                    <%= n.message %><br>
-                    <small style="color:#64748b;"><%= new Date(n.created_at).toLocaleString() %></small>
+                    <div>
+                        <%= n.message %><br>
+                        <small style="color:#64748b;"><%= new Date(n.created_at).toLocaleString() %></small>
+                    </div>
+                    <form action="/admin/notifications/delete/<%= n.id %>" method="POST">
+                        <button type="submit" class="action" style="background:#991b1b;">Delete</button>
+                    </form>
                 </div>
             <% }) %>
         <% } %>
@@ -112,7 +122,6 @@
     </div>
 
     <div class="grid">
-        <!-- Admin Profile -->
         <div class="panel">
             <h3 style="color:#f43f5e;">Admin Profile</h3>
             <form action="/admin/self/update" method="POST">
@@ -130,7 +139,6 @@
                 </div>
                 <button type="submit" class="btn" style="background:#e11d48;">Save Profile</button>
             </form>
-
             <div class="qr-box">
                 <h4 style="color:#94a3b8; font-size:12px;">Site QR & Link</h4>
                 <% if (typeof qrCode !== 'undefined' && qrCode) { %>
@@ -142,7 +150,6 @@
             </div>
         </div>
 
-        <!-- Catalog -->
         <div class="panel">
             <h3>Catalog</h3>
             <div style="overflow-x:auto;">
@@ -180,7 +187,6 @@
     </div>
 
     <div class="grid">
-        <!-- Add Product -->
         <div class="panel">
             <h3>Add Product</h3>
             <form action="/admin/product/add" method="POST" enctype="multipart/form-data">
@@ -189,7 +195,7 @@
                     <div style="flex:2;"><label>Price</label><input type="number" step="0.01" name="price" required></div>
                     <div style="width:70px;"><label>Currency</label><input type="text" name="currency" value="Ksh" required></div>
                 </div>
-                <div class="group"><label>Category</label><input type="text" name="category" value="General" placeholder="Electronics, Clothes..."></div>
+                <div class="group"><label>Category</label><input type="text" name="category" value="General"></div>
                 <div class="group"><label>Description</label><textarea name="description" rows="2"></textarea></div>
                 <div class="group">
                     <label>Status</label>
@@ -204,7 +210,6 @@
             </form>
         </div>
 
-        <!-- Customers -->
         <div class="panel">
             <h3>Customers</h3>
             <div style="overflow-x:auto;">
@@ -244,7 +249,6 @@
         </div>
     </div>
 
-    <!-- Contact -->
     <div class="panel">
         <h3>Store Contact</h3>
         <form action="/admin/contact/update" method="POST" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
