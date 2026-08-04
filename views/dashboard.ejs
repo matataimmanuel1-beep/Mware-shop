@@ -6,8 +6,10 @@
     <title>Mware Shop</title>
     <style>
         body { background: <%= theme.bg %>; color: <%= theme.text %>; font-family: sans-serif; margin: 0; padding-bottom: 50px; }
-        nav { background: #020617; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid <%= theme.accent %>; flex-wrap: wrap; gap: 10px; }
-        .logo { font-size: 20px; font-weight: 900; color: #fff; text-decoration: none; }
+        nav { background: #020617; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid <%= theme.accent %>; flex-wrap: wrap; gap: 10px; }
+        .logo-link { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-link img { height: 42px; width: auto; border-radius: 8px; object-fit: contain; background: #1e293b; }
+        .logo-text { font-size: 18px; font-weight: 900; color: #fff; }
         .nav-links { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
         .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 13px; font-weight: bold; }
         .badge { background: <%= theme.accent %>; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
@@ -57,16 +59,18 @@
         @media(max-width: 768px) {
             .container { grid-template-columns: 1fr; }
             .split-checkout { grid-template-columns: 1fr; }
+            .logo-text { font-size: 15px; }
+            .logo-link img { height: 34px; }
         }
     </style>
 </head>
 <body>
     <nav>
         <div style="display:flex; align-items:center; gap:10px;">
-            <a href="/" class="logo" style="display:flex; align-items:center; gap:8px; text-decoration:none;">
-    <img src="/public/logo.png" alt="Mware Shop" style="height:36px; width:auto; border-radius:6px;">
-    <span style="font-size:18px; font-weight:900; color:#fff;">MWARE SHOP</span>
-</a>
+            <a href="/" class="logo-link">
+                <img src="/logo.png" alt="Mware Shop Logo" onerror="this.onerror=null; this.src='/public/logo.png';">
+                <span class="logo-text">MWARE SHOP</span>
+            </a>
             <% if (user && user.role === 'admin') { %>
                 <span style="font-size:10px; background:<%= theme.accent %>; color:#000; padding:2px 6px; border-radius:4px; font-weight:bold;"><%= theme.name %></span>
             <% } %>
@@ -167,9 +171,7 @@
                                 <div class="summary-row" style="border:none; font-weight:bold; font-size:16px;">
                                     <span>Total</span><span><%= financials.total %> <%= financials.currency %></span>
                                 </div>
-                                <p style="font-size:12px; color:#94a3b8; margin-top:10px;">
-                                    * Admin will confirm final total (including transport if any)
-                                </p>
+                                <p style="font-size:12px; color:#94a3b8; margin-top:10px;">* Admin will confirm final total</p>
                             </div>
                         </div>
                     </div>
@@ -178,7 +180,6 @@
             <% } else if (activeTab === 'profile') { %>
                 <h2>My Account</h2>
 
-                <!-- Store Owner Details -->
                 <div class="box">
                     <h3>Store Owner Details</h3>
                     <p style="margin:6px 0;"><strong>Phone:</strong> <%= contactInfo.phone %></p>
@@ -186,7 +187,6 @@
                     <p style="margin:6px 0;"><strong>Address:</strong> <%= contactInfo.address %></p>
                 </div>
 
-                <!-- Profile -->
                 <div class="box">
                     <h3>My Profile</h3>
                     <% if (account && account.profile_image) { %>
@@ -209,7 +209,6 @@
                     </form>
                 </div>
 
-                <!-- Notifications -->
                 <div class="box">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                         <h3 style="margin:0;">Notifications</h3>
@@ -234,7 +233,6 @@
                     <% } %>
                 </div>
 
-                <!-- Orders -->
                 <div class="box">
                     <h3>My Orders</h3>
                     <% if (!customerOrders || customerOrders.length === 0) { %>
@@ -259,13 +257,7 @@
                                             <td><%= ord.date %></td>
                                             <td><%= ord.items %></td>
                                             <td><%= ord.total %> <%= ord.currency %></td>
-                                            <td>
-                                                <span style="padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;
-                                                    background: <%= ord.status==='Delivered' ? 'rgba(34,197,94,0.15)' : ord.status==='Shipped' ? 'rgba(59,130,246,0.15)' : 'rgba(234,179,8,0.15)' %>;
-                                                    color: <%= ord.status==='Delivered' ? '#4ade80' : ord.status==='Shipped' ? '#60a5fa' : '#facc15' %>;">
-                                                    <%= ord.status %>
-                                                </span>
-                                            </td>
+                                            <td><%= ord.status %></td>
                                             <td>
                                                 <% if (ord.status === 'Shipped') { %>
                                                     <form action="/orders/confirm-delivery" method="POST">
@@ -284,7 +276,6 @@
             <% } %>
         </div>
 
-        <!-- Sidebar -->
         <div>
             <div class="box">
                 <h4 style="margin:0 0 10px 0; font-size:12px; color:#94a3b8; text-transform:uppercase;">Store Support</h4>
@@ -315,17 +306,8 @@
         function showTill() {
             const val = document.getElementById('payMethod');
             const box = document.getElementById('tillBox');
-            if (val && box) {
-                box.style.display = val.value === 'M-Pesa Till' ? 'block' : 'none';
-            }
+            if (val && box) box.style.display = val.value === 'M-Pesa Till' ? 'block' : 'none';
         }
-        // Popup latest notification once
-        <% if (activeTab === 'profile' && typeof notifications !== 'undefined' && notifications && notifications.length > 0) { %>
-        if (!sessionStorage.getItem('notif_shown')) {
-            alert("Notification: <%= notifications[0].message.replace(/"/g, '\\"').replace(/'/g, "\\'") %>");
-            sessionStorage.setItem('notif_shown', '1');
-        }
-        <% } %>
     </script>
 </body>
 </html>
