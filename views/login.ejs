@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Mware Shop</title>
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 40px 20px; }
         .container { max-width: 420px; margin: 40px auto; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 30px; }
+        .logo-wrap { text-align: center; margin-bottom: 20px; }
+        .logo-wrap img { height: 60px; width: auto; border-radius: 10px; }
         h1 { text-align: center; color: #fbbf24; margin-bottom: 20px; }
         .form-group { margin-bottom: 18px; position: relative; }
         label { display: block; font-size: 13px; margin-bottom: 5px; color: #94a3b8; font-weight: bold; }
@@ -19,6 +22,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="logo-wrap">
+            <img src="/logo.png" alt="Mware Shop" onerror="this.onerror=null; this.src='/public/logo.png';">
+        </div>
         <h1>🔑 Login</h1>
         <% if (message) { %><div class="alert"><%= message %></div><% } %>
 
