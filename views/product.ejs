@@ -7,8 +7,10 @@
     <style>
         body { background: #0f172a; color: #f8fafc; font-family: sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; }
+        .top { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; }
+        .top img { height: 40px; width: auto; border-radius: 8px; }
         .back { color: #60a5fa; text-decoration: none; font-size: 14px; }
-        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; }
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
         .product-img { width: 100%; border-radius: 12px; border: 1px solid #334155; }
         .price { font-size: 28px; font-family: monospace; color: #6366f1; font-weight: bold; margin: 15px 0; }
         .btn { padding: 14px 28px; background: #4f46e5; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; }
@@ -20,7 +22,10 @@
 </head>
 <body>
     <div class="container">
-        <a href="/" class="back">← Back to Catalog</a>
+        <div class="top">
+            <img src="/logo.png" alt="Mware Shop" onerror="this.onerror=null; this.src='/public/logo.png';">
+            <a href="/" class="back">← Back to Catalog</a>
+        </div>
 
         <div class="product-grid">
             <div>
