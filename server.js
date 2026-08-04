@@ -25,6 +25,9 @@ const upload = multer({ storage });
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Serve logo and static files
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 
 app.use((req, res, next) => {
@@ -40,7 +43,6 @@ app.use(session({
     cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 }
 }));
 
-// ====================== DATABASE ======================
 async function initDatabase() {
     try {
         await pool.query(`CREATE TABLE IF NOT EXISTS contact_info (id INT PRIMARY KEY, phone TEXT, email TEXT, address TEXT)`);
@@ -94,7 +96,6 @@ function getHolidayTheme() {
     const now = new Date();
     const month = now.getMonth() + 1;
     const day = now.getDate();
-
     if (month === 3 || (month === 4 && day <= 10)) {
         return { name: 'Ramadan Kareem', bg: '#0f172a', cardBg: '#1e293b', text: '#f8fafc', accent: '#22c55e', btn: '#16a34a' };
     }
@@ -113,7 +114,6 @@ async function createNotification(email, message) {
     } catch (e) {}
 }
 
-// ====================== MIDDLEWARE ======================
 app.use(async (req, res, next) => {
     if (!req.session.cart) req.session.cart = [];
     try {
@@ -130,7 +130,6 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// ====================== PUBLIC ======================
 app.get('/', async (req, res) => {
     try {
         const category = req.query.category || '';
@@ -143,22 +142,15 @@ app.get('/', async (req, res) => {
         const prodRes = await pool.query(query, params);
         const categoriesRes = await pool.query("SELECT DISTINCT category FROM products ORDER BY category");
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id = 1");
-
         res.render('dashboard', {
             products: prodRes.rows,
             categories: categoriesRes.rows,
             selectedCategory: category,
             contactInfo: contactRes.rows[0] || { phone: '+254 700 000 000', email: 'support@mwareshop.com', address: 'Mombasa, Kenya' },
             activeTab: 'shop',
-            notifications: [],
-            customerOrders: [],
-            account: null,
-            cart: null,
-            financials: null
+            notifications: [], customerOrders: [], account: null, cart: null, financials: null
         });
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.get('/product/:id', async (req, res) => {
@@ -167,9 +159,7 @@ app.get('/product/:id', async (req, res) => {
         if (prod.rows.length === 0) return res.status(404).send('Product not found');
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id = 1");
         res.render('product', { product: prod.rows[0], contactInfo: contactRes.rows[0] || {} });
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.get('/profile', async (req, res) => {
@@ -179,22 +169,16 @@ app.get('/profile', async (req, res) => {
         const orderRes = await pool.query("SELECT * FROM orders WHERE customer_email = $1 ORDER BY id DESC", [req.session.user.email]);
         const notifRes = await pool.query("SELECT * FROM notifications WHERE user_email = $1 ORDER BY created_at DESC LIMIT 30", [req.session.user.email]);
         const contactRes = await pool.query("SELECT * FROM contact_info WHERE id = 1");
-
         res.render('dashboard', {
-            products: [],
-            categories: [],
-            selectedCategory: '',
+            products: [], categories: [], selectedCategory: '',
             contactInfo: contactRes.rows[0] || {},
             activeTab: 'profile',
             account: userRes.rows[0] || { email: req.session.user.email },
             customerOrders: orderRes.rows,
             notifications: notifRes.rows,
-            cart: null,
-            financials: null
+            cart: null, financials: null
         });
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.post('/profile/update-full', upload.single('profileImage'), async (req, res) => {
@@ -204,17 +188,13 @@ app.post('/profile/update-full', upload.single('profileImage'), async (req, res)
         if (newPassword && newPassword.trim() !== '') {
             await pool.query("UPDATE users SET password = $1 WHERE email = $2", [newPassword, req.session.user.email]);
         }
-        if (phone) {
-            await pool.query("UPDATE users SET phone = $1 WHERE email = $2", [phone, req.session.user.email]);
-        }
+        if (phone) await pool.query("UPDATE users SET phone = $1 WHERE email = $2", [phone, req.session.user.email]);
         if (req.file) {
             const imagePath = '/public/uploads/' + req.file.filename;
             await pool.query("UPDATE users SET profile_image = $1 WHERE email = $2", [imagePath, req.session.user.email]);
         }
         res.redirect('/profile');
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.post('/notifications/clear', async (req, res) => {
@@ -241,13 +221,9 @@ app.post('/orders/confirm-delivery', async (req, res) => {
 app.post('/cart/add', async (req, res) => {
     try {
         const prod = await pool.query("SELECT * FROM products WHERE id = $1", [req.body.productId]);
-        if (prod.rows.length > 0 && prod.rows[0].status === 'In Stock') {
-            req.session.cart.push(prod.rows[0]);
-        }
+        if (prod.rows.length > 0 && prod.rows[0].status === 'In Stock') req.session.cart.push(prod.rows[0]);
         res.redirect(req.get('Referer') || '/');
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.get('/checkout', async (req, res) => {
@@ -258,7 +234,6 @@ app.get('/checkout', async (req, res) => {
         subtotal += parseFloat(item.price);
         currencySymbol = item.currency || 'Ksh';
     });
-
     const financials = {
         subtotal: subtotal.toFixed(2),
         shipping: '0.00',
@@ -266,19 +241,12 @@ app.get('/checkout', async (req, res) => {
         total: subtotal.toFixed(2),
         currency: currencySymbol
     };
-
     const contactRes = await pool.query("SELECT * FROM contact_info WHERE id = 1");
     res.render('dashboard', {
-        products: [],
-        categories: [],
-        selectedCategory: '',
-        cart,
-        contactInfo: contactRes.rows[0] || {},
-        activeTab: 'checkout',
-        financials,
-        notifications: [],
-        customerOrders: [],
-        account: null
+        products: [], categories: [], selectedCategory: '',
+        cart, contactInfo: contactRes.rows[0] || {},
+        activeTab: 'checkout', financials,
+        notifications: [], customerOrders: [], account: null
     });
 });
 
@@ -289,27 +257,19 @@ app.post('/checkout/pay', async (req, res) => {
     const customerEmail = req.session.user ? req.session.user.email : 'Guest Checkout';
     const itemNames = cartItems.map(i => i.name).join(', ');
     const orderDate = new Date().toLocaleDateString();
-
     try {
         await pool.query(
             `INSERT INTO orders (id, customer_email, full_name, shipping_address, gateway_method, items, total, currency, status, date)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
             [orderId, customerEmail, fullName, shippingAddress, gatewayMethod, itemNames, totalAmount, totalCurrency, 'Pending', orderDate]
         );
-
-        if (req.session.user) {
-            await createNotification(customerEmail, `Order ${orderId} placed. Admin will confirm final total.`);
-        }
+        if (req.session.user) await createNotification(customerEmail, `Order ${orderId} placed. Admin will confirm final total.`);
         await createNotification('admin@mwareshop.com', `New order ${orderId} from ${fullName}`);
-
         req.session.cart = [];
         res.send("<script>alert('Order placed! Admin will confirm final total.'); window.location='/';</script>");
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
-// ====================== AUTH ======================
 app.get('/login', (req, res) => res.render('login', { message: null }));
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
@@ -320,9 +280,7 @@ app.post('/login', async (req, res) => {
             return found.rows[0].role === 'admin' ? res.redirect('/admin') : res.redirect('/');
         }
         res.render('login', { message: 'Invalid email or password.' });
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.get('/register', (req, res) => res.render('register', { message: null }));
@@ -334,50 +292,36 @@ app.post('/register', async (req, res) => {
         await pool.query("INSERT INTO users (email, phone, password, role) VALUES ($1,$2,$3,'customer')", [email, phone, password]);
         req.session.user = { email, role: 'customer' };
         res.redirect('/');
-    } catch (e) {
-        res.render('register', { message: 'Registration failed.' });
-    }
+    } catch (e) { res.render('register', { message: 'Registration failed.' }); }
 });
 
-app.get('/forgot-password', (req, res) => {
-    res.render('forgot-password', { message: null, success: false, generatedCode: null });
-});
+app.get('/forgot-password', (req, res) => res.render('forgot-password', { message: null, success: false, generatedCode: null }));
 app.post('/forgot-password', async (req, res) => {
     const { email, newPassword, verificationCode, action } = req.body;
     try {
         if (action === 'request') {
             const code = Math.floor(100000 + Math.random() * 900000).toString();
             const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-            if (user.rows.length === 0) {
-                return res.render('forgot-password', { message: 'No account found.', success: false, generatedCode: null });
-            }
+            if (user.rows.length === 0) return res.render('forgot-password', { message: 'No account found.', success: false, generatedCode: null });
             await pool.query("UPDATE users SET reset_code = $1 WHERE email = $2", [code, email]);
             return res.render('forgot-password', { message: 'Verification code generated.', success: true, generatedCode: code, email });
         }
         const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (user.rows.length === 0) {
-            return res.render('forgot-password', { message: 'Account not found.', success: false, generatedCode: null });
-        }
+        if (user.rows.length === 0) return res.render('forgot-password', { message: 'Account not found.', success: false, generatedCode: null });
         if (!user.rows[0].reset_code || user.rows[0].reset_code !== verificationCode) {
             return res.render('forgot-password', { message: 'Invalid code.', success: false, generatedCode: null });
         }
         await pool.query("UPDATE users SET password = $1, reset_code = NULL WHERE email = $2", [newPassword, email]);
         res.render('forgot-password', { message: 'Password reset successfully!', success: true, generatedCode: null });
-    } catch (e) {
-        res.render('forgot-password', { message: 'Error occurred.', success: false, generatedCode: null });
-    }
+    } catch (e) { res.render('forgot-password', { message: 'Error occurred.', success: false, generatedCode: null }); }
 });
 
-app.get('/logout', (req, res) => {
-    req.session.destroy(() => res.redirect('/'));
-});
-
+app.get('/logout', (req, res) => { req.session.destroy(() => res.redirect('/')); });
 app.get('/switch-view', (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') return res.redirect('/');
     res.redirect('/');
 });
 
-// ====================== ADMIN ======================
 app.get('/admin', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') return res.status(403).send('Admin required');
     try {
@@ -397,46 +341,21 @@ app.get('/admin', async (req, res) => {
             accounts: accountsRes.rows,
             notifications: notifRes.rows
         });
-    } catch (e) {
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.post('/admin/orders/update-status', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.status(403).send('Forbidden');
-    }
-
-    const orderId = req.body.orderId;
-    const targetStatus = req.body.targetStatus;
-
-    if (!orderId || !targetStatus) {
-        return res.status(400).send('Missing order ID or status');
-    }
-
+    if (!req.session.user || req.session.user.role !== 'admin') return res.status(403).send('Forbidden');
+    const { orderId, targetStatus } = req.body;
+    if (!orderId || !targetStatus) return res.status(400).send('Missing data');
     try {
-        await pool.query(
-            "UPDATE orders SET status = $1 WHERE id = $2",
-            [targetStatus, orderId]
-        );
-
-        const order = await pool.query(
-            "SELECT customer_email FROM orders WHERE id = $1",
-            [orderId]
-        );
-
+        await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [targetStatus, orderId]);
+        const order = await pool.query("SELECT customer_email FROM orders WHERE id = $1", [orderId]);
         if (order.rows[0] && order.rows[0].customer_email !== 'Guest Checkout') {
-            await createNotification(
-                order.rows[0].customer_email,
-                `Order ${orderId} is now: ${targetStatus}`
-            );
+            await createNotification(order.rows[0].customer_email, `Order ${orderId} is now: ${targetStatus}`);
         }
-
         res.redirect('/admin');
-    } catch (e) {
-        console.error('Status update error:', e);
-        res.status(500).send(e.toString());
-    }
+    } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.post('/admin/orders/set-total', async (req, res) => {
